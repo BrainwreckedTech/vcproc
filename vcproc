@@ -4,6 +4,7 @@ MISSDP=false
 
 ! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
 ! command -v ffmpeg &> /dev/null && echo "Could not find ffmpeg" && MISSDP=true
+! command -v mediainfo &> /dev/null && echo "Could not find mediainfo" && MISSDP=true
 ! command -v mpv &> /dev/null && echo "Could not find mpv" && MISSDP=true
 ! command -v bc &> /dev/null && echo "Could not find bc" && MISSDP=true
 
