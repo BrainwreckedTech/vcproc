@@ -111,7 +111,8 @@ case ${1} in
     VDOEXT="${VDOFIL##*.}"
 
     msg "Remuxing ${VDOFIL}..."
-    ffmpeg ${FFOPTS} -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "original.${VDOEXT}"
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero -f ${VDOEXT} remux.tmp
+    mv remux.tmp "remux.${VDOEXT}"
     msg 'Remuxing complete.'
     
     read -r -p "Delete ${VDOFIL}? [y/N] " DELFIL
@@ -178,7 +179,8 @@ case ${1} in
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
     msg 'Trimming original video...'
-    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "trimmed.${VDOEXT}"
+    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero -f "${VDOEXT}" trimmed.tmp
+    mv trimmed.tmp "trimmed.${VDOEXT}"
     msg 'Cleaning up.'
     rm original.ifl
     
