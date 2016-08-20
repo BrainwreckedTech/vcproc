@@ -359,18 +359,20 @@ case ${1} in
     
   youtube)
 
-    msg 'Gathering video information...'
-  
-    BR_HRF=$(mediainfo "${VDOFIL}" | grep 'bit rate' | grep -vi 'maximum\|mode' | cut -d: -f2 | sed 's: ::g')
-    BRMATH="$(echo "${BR_HRF}" | sed 's:Mb/s: \* 1000000:g')"
-    BR_BPS=$(bc <<< "${BRMATH}" | sed 's/\.0$//g')
-    REFUSE="$(bc <<< "12000000 * 1.35" | sed 's/0*$//g;s/\.$//g')"
-    WARNIN="$(bc <<< "12000000 * 1.65" | sed 's/0*$//g;s/\.$//g')"
-    
-    if [ "$(bc <<< "${BR_BPS} < ${REFUSE}")" == "1" ]; then
-      msg "REFUSAL: Youtube recommends 12Mb/s. Original video is ${BR_HRF}. Nothing to gain here."
-      msg "Try '${SCRPNM} vcap' or '${SCRPNM} youtube force'"
-      exit 1
+    if [ "${2}" != "force" ]; then
+      msg 'Gathering video information...'
+
+      BR_HRF=$(mediainfo "${VDOFIL}" | grep 'bit rate' | grep -vi 'maximum\|mode' | cut -d: -f2 | sed 's: ::g')
+      BRMATH="$(echo "${BR_HRF}" | sed 's:Mb/s: \* 1000000:g')"
+      BR_BPS=$(bc <<< "${BRMATH}" | sed 's/\.0$//g')
+      REFUSE="$(bc <<< "12000000 * 1.35" | sed 's/0*$//g;s/\.$//g')"
+      WARNIN="$(bc <<< "12000000 * 1.65" | sed 's/0*$//g;s/\.$//g')"
+
+      if [ "$(bc <<< "${BR_BPS} < ${REFUSE}")" == "1" ]; then
+        msg "REFUSAL: Youtube recommends 12Mb/s. Original video is ${BR_HRF}. Nothing to gain here."
+        msg "Try '${SCRPNM} vcap' or '${SCRPNM} youtube force'"
+        exit 1
+      fi
     fi
 
     msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
