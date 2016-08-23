@@ -295,10 +295,10 @@ case ${1} in
     echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> ${SCRPNM}.tmp
 
     if ! ask_copy_cfg 'ADPEAK'; then
-      msg 'Determining peak audio level...'
+      dialog --infobox "\n Determining peak audio level..." 5 38
       ADPEAK="$(ffmpeg -ss ${VIP_TC} -i "${VDOFIL}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
       echo "ADPEAK=${ADPEAK}" >> ${SCRPNM}.tmp
-      msg "Peak audio level of ${ADPEAK} added to config."
+      dialog --msgbox "\n Peak audio level of -${ADPEAK}dB added to config." 7 51
     fi
 
     sort -u ${SCRPNM}.tmp > ${SCRPNM}.cfg; rm ${SCRPNM}.tmp
