@@ -103,10 +103,11 @@ case ${1} in
       VDOFIL="${2}"
     elif [ -z ${VDOFIL+x} ]; then 
       VDOFIL="$(list_video_files)"
-      [[ "$(echo -n "${FILES}" | wc -l)" -eq "0" ]] && msg "Found file ${VDOFIL}"
-      [[ "$(echo -n "${FILES}" | wc -l)" -ge "1" ]] && msg "Found multiple video files."
-      [[ "$(echo -n "${FILES}" | wc -l)" -ne "0" ]] && VDOFIL="$(get_file_dialog)"
-    fi
+      if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
+        [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog)"
+      else
+        VDOFIL="$(get_file_dialog)"
+      fi    fi
     
     VDOEXT="${VDOFIL##*.}"
 
@@ -125,9 +126,11 @@ case ${1} in
       VDOFIL="${2}"
     elif [ -z ${VDOFIL+x} ]; then 
       VDOFIL="$(list_video_files)"
-      [[ "$(echo -n "${FILES}" | wc -l)" -eq "0" ]] && msg "Found file ${VDOFIL}"
-      [[ "$(echo -n "${FILES}" | wc -l)" -ge "1" ]] && msg "Found multiple video files."
-      [[ "$(echo -n "${FILES}" | wc -l)" -ne "0" ]] && VDOFIL="$(get_file_dialog)"
+      if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
+        [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog)"
+      else
+        VDOFIL="$(get_file_dialog)"
+      fi
     fi
 
     VDOEXT="${VDOFIL##*.}"
