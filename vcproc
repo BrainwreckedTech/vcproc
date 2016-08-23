@@ -204,7 +204,7 @@ case ${1} in
 
     function ask_copy_cfg() {
 
-      SETING="$(grep -q "${1}=" ${SCRPNM}.cfg)"
+      SETING="$(grep -q "${1}=" ${SCRPNM}.cfg 2> /dev/null)"
       [[ "${SETING}" == "" ]] && return 1
       echo "Found: ${SETING}"
       read -p "Do you want to copy this setting from existing ${SCRPNM}.cfg? [y/N] " RESULT
