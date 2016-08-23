@@ -442,6 +442,14 @@ case ${1} in
     msg 'Finished combining original video with Copyright Deadlock bait...'
     ;;
 
+  csav)
+
+    msg "Combining video from ${2} with audio from ${3}..."
+    ffmpeg ${FFOPTS} -i "${2}" -i "${3}" -c copy -map 0:v:0 -map 1:a:0 -shortest yt.mp4
+    [[ $? != 0 ]] && msg "Error combining video from ${2} with audio from ${3}." && exit 1
+    msg "Finished Combining video in ${2} with audio from ${3}."
+    ;;
+
   homearch)
 
     VDOSET="-c:v libx264 -preset slower -crf 5 -qmin 0 -qmax 10 -refs 12 -bf 16 -profile:v high -level 4.2"
