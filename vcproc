@@ -368,8 +368,8 @@ case ${1} in
       BR_HRF=$(mediainfo "${VDOFIL}" | grep 'bit rate' | grep -vi 'maximum\|mode' | cut -d: -f2 | sed 's: ::g')
       BRMATH="$(echo "${BR_HRF}" | sed 's:Mb/s: \* 1000000:g')"
       BR_BPS=$(bc <<< "${BRMATH}" | sed 's/\.0$//g')
-      BRRDCH=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 12000000 / ${BR_BPS} * 100 + 0.005")
-      BRRDCL=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 18000000 / ${BR_BPS} * 100 + 0.005")
+      BRRDCH=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 12000000 / ${BR_BPS} * 100 + 0.005"))
+      BRRDCL=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 18000000 / ${BR_BPS} * 100 + 0.005"))
       REFUSE=0
 
       if [ "${IPCRNG}" == "${OPCRNG}" ]; then
