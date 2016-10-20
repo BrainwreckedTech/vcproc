@@ -169,12 +169,12 @@ case ${1} in
     rm original.ift
     msg 'I-frame list generation complete.'
 
-    msg "Calculating closest I-frame before in-point less one second..."
+    msg "Calculating closest I-frame before in-point less two seconds..."
     cp original.ifl original.ifc
-    bc <<< "${VIPSEC} - 1" >> original.ifc
+    bc <<< "${VIPSEC} - 2" >> original.ifc
     sort -n original.ifc > original.ifs
     rm original.ifc
-    TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC} - 1")" original.ifs | head -1 | tr -d '\n')
+    TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC} - 2")" original.ifs | head -1 | tr -d '\n')
     msg "Closest I-frame before ${VIPSEC}s is ${TIPSEC}s"
     rm original.ifs
     TOPSEC=${VOPSEC}
