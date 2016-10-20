@@ -218,7 +218,18 @@ case ${1} in
 
     [[ -s ${SCRPNM}.cfg ]] && msg 'Existing ${SCRPNM}.cfg file found.'
 
-    VDOFIL="$(get_file_dialog "$(realpath ${VDOFIL})")"
+    if [ -n "${2}" ] && [ -s "${2}" ]; then
+      VDOFIL="${2}"
+    elif [ -z ${VDOFIL+x} ]; then 
+      VDOFIL="$(list_video_files)"
+      if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
+        [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog "$(realpath ${VDOFIL})")"
+      else
+        VDOFIL="$(get_file_dialog)"
+      fi
+    fi
+
+    VDOEXT="${VDOFIL##*.}"
     echo "VDOFIL=${VDOFIL#$(pwd)/}" > ${SCRPNM}.tmp
 
     if [ -z ${OPWIDE+X} ] && [ -z ${OPHIGH+X} ] && [ -z ${FRMRAT+X} ] && [ -z ${VDODAR+X} ]; then
