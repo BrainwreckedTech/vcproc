@@ -152,13 +152,18 @@ case ${1} in
       msg "Found Video In/Out Points from ${SCRPNM}.cfg"
     fi
 
-    [[ $(bc <<< "${VIPSEC} < 35") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC} - 35")
-    RISTOP="$(bc <<< "${VIPSEC} + 35")"
-    RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
+    for IFDRTN in 5 20 35; do
+      [[ $(bc <<< "${VIPSEC} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC} - ${IFDRTN}")
+      RISTOP="$(bc <<< "${VIPSEC} + ${IFDRTN}")"
+      [[ $(bc <<< "${RISTOP} > ${VOPSEC}") == 1 ]] && RISTOP="${VOPSEC}"
+      RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
-    msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
-    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > original.ift
-    msg 'Generation completed.'
+      msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
+      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > original.ift
+      msg 'Generation completed.'
+
+      [ -s original.ift ] && break
+    done
 
     STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
     msg "Stream time stamps start at ${STRTTM}s -- adjusting time stamps..."
@@ -331,13 +336,19 @@ case ${1} in
 
     VDOEXT="${VDOFIL##*.}"
     VIPSEC=$(tc2sec "${VIP_TC}")
-    [[ $(bc <<< "${VIPSEC} < 35") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC} - 35")
-    RISTOP="$(bc <<< "${VIPSEC} + 35")"
-    RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
-    msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
-    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv ${VDOFIL} | grep I | cut -d, -f2 > vcap.ift
-    msg 'Generation completed.'
+    for IFDRTN in 5 20 35; do
+      [[ $(bc <<< "${VIPSEC} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC} - ${IFDRTN}")
+      RISTOP="$(bc <<< "${VIPSEC} + ${IFDRTN}")"
+      [[ $(bc <<< "${RISTOP} > ${VOPSEC}") == 1 ]] && RISTOP="${VOPSEC}"
+      RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
+
+      msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
+      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > vcap.ift
+      msg 'Generation completed.'
+
+      [ -s vcap.ift ] && break
+    done
 
     STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
     msg "Stream time stamps start at ${STRTTM}s -- adjusting time stamps..."
