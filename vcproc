@@ -85,7 +85,7 @@ if [ -s ${SCRPNM}.cfg ]; then
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
     GOPLEN="-g $(echo "( ${FRMRAT} + 1 ) / 2" | bc)"
     V_FLTR="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR}"
-  fi  
+  fi
 
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$(bc <<< "${VOPSEC} - ${VIPSEC}")
   [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ] && A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,${MTLEAD})':volume=0"
@@ -101,7 +101,7 @@ case ${1} in
 
     if [ -n "${2}" ] && [ -s "${2}" ]; then
       VDOFIL="${2}"
-    elif [ -z ${VDOFIL+x} ]; then 
+    elif [ -z ${VDOFIL+x} ]; then
       VDOFIL="$(list_video_files)"
       if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
         [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog)"
@@ -124,7 +124,7 @@ case ${1} in
 
     if [ -n "${2}" ] && [ -s "${2}" ]; then
       VDOFIL="${2}"
-    elif [ -z ${VDOFIL+x} ]; then 
+    elif [ -z ${VDOFIL+x} ]; then
       VDOFIL="$(list_video_files)"
       if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
         [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog)"
@@ -225,7 +225,7 @@ case ${1} in
 
     if [ -n "${2}" ] && [ -s "${2}" ]; then
       VDOFIL="${2}"
-    elif [ -z ${VDOFIL+x} ]; then 
+    elif [ -z ${VDOFIL+x} ]; then
       VDOFIL="$(list_video_files)"
       if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
         [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog "$(realpath ${VDOFIL})")"
@@ -242,7 +242,7 @@ case ${1} in
       eval $(mediainfo "${VDOFIL}" | grep 'Width\|Height\|Display aspect ratio\|Frame rate' | sed 's/ *: /=/g;s/Display aspect ratio/VDODAR/g;s/Frame rate/FRMRAT/g;s/Height/OPHIGH/g;s/Width/OPWIDE/g;s/ pixels//g;s/ FPS//gI;s/ //g;s/(.*)//g;s/\.0\+//g;s|:|/|g')
     else
       HLPMSG='These properties were pulled from existing config.  Please verify them.'
-    fi    
+    fi
 
     SPROPS="$(dialog --stdout --title 'Source Video Properties' --form "${HLPMSG}" 12 36 0 ' Width:' 1 1 "${OPWIDE}" 1 9 5 0 'Height:' 2 1 "${OPHIGH}" 2 9 5 0 '   FPS:' 3 1 "${FRMRAT}" 3 9 7 0 '   DAR:' 4 1 "${VDODAR}" 4 9 5 0 | tr '\n' '-' | sed 's/-$//g' )"
 
@@ -257,7 +257,7 @@ case ${1} in
     else
       HLPMSG="These values were pulled from an existing config.  Please verify them.  Enter time codes in HH:MM:SS.mmm format."
       TM_CDS="${VIP_TC}-${VOP_TC}"
-    fi  
+    fi
 
     mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
 
@@ -284,7 +284,7 @@ case ${1} in
       TVSLCT=off; PCSLCT=on
     else
       TVSLCT=on; PCSLCT=off
-    fi  
+    fi
 
     HLPMSG="What is the luma range in the source?\n\nOptical media typically uses Limited RGB.\n\nGame consoles output to Limited RGB unless you set them to use Full RGB.\n\nYou can take a snapshot from a video player and analyze the levels in an image editor if you are not sure."
     IPCRNG=$(dialog --stdout --backtitle "Source Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
@@ -294,7 +294,7 @@ case ${1} in
       TVSLCT=off; PCSLCT=on
     else
       TVSLCT=on; PCSLCT=off
-    fi  
+    fi
 
     HLPMSG="What is the luma range you would like in the output?\n\nLimited RGB will look slightly washed out on computer displays but fine on video displays.\n\nFull RGB will crush shadows and lights on video displays but look fine on computer displays."
     OPCRNG=$(dialog --stdout --backtitle "Output Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
@@ -368,7 +368,7 @@ case ${1} in
     msg "Closest I-frame after ${VIPSEC}s is ${TIPSEC}s"
     rm vcap.ifs
     TOPSEC=${VOPSEC}
-    TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")  
+    TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
     msg "Creating video from $(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}") in ${VDOFIL}..."
     ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy \
@@ -441,7 +441,7 @@ case ${1} in
       JOINSF=$(printf "%04d" $JOINS)
       if [ -s join${JOINSF}.mkv ]; then
         echo "Lossless copy of ${1} exists.  Skipping."
-      else  
+      else
         if [ "${1}" == "vc" ]; then
           msg 'Creating lossless video clip...'
           ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
@@ -508,7 +508,7 @@ case ${1} in
 	    TMCODE=$(bc <<< "$(tc2sec "${DRFDUR}") + ${2}")
 	  fi
           ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${DRFILE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
-        fi  
+        fi
       done
     fi
     ;;
