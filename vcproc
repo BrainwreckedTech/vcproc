@@ -15,6 +15,10 @@ CLNORM="$(tput sgr0)"
 FFOPTS="-y -v fatal -stats"
 SCRPNM="$(basename "${0}")"
 
+grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
+grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
+ON_WSL=true || ON_WSL=false
+
 function pak {
   read -r -n1 -r -s -p 'Press any key to continue...'
 }
