@@ -13,17 +13,17 @@ Workflow
            +->  set  -+
                       +-  vcap
 
-### all [process] [normal additional arguments]
+### `all [process] [normal additional arguments]`
 
-Execute [process] for each instance of vcproc.cfg (process=join|lossless|preview|vcap|youtube) or [normal additional arguments] (which would only be a file name when process=remux|set|trim) found in the current directory and all subdirectories.  If a [process] file (eg. vcap.mp4 for vcap, remux.ts for remux, etc.) is found, that directory will be skipped on the assumption that the process has already been run.
+Execute `[process]` for each instance of vcproc.cfg (process=join|lossless|preview|vcap|youtube) or `[normal additional arguments]` (which would only be a file name when process=remux|set|trim) found in the current directory and all subdirectories.  If a `[process]` file (eg. vcap.mp4 for vcap, remux.ts for remux, etc.) is found, that directory will be skipped on the assumption that the process has already been run.
 
-### remux [video]
+### `remux [video]`
 
 This process might be optional, but there is no harm in running it, it operates almost as fast as your hard drive can copy the data, and it copies the original streams (maintaining their original quality) into the same container type with the time stamps reset to near-zero.
 
 If your recorder generates "goofy" timestamps, this step will become necessary.  It will fix all time stamps so the remaining vcproc processes operate properly.  Contrary to popular belief, video doesn't have to start at time code 00:00:00.000.  It is perfectly valid for your first frame to start with a PTS (Presentation Time Stamp) that is something later -- sometimes **a lot** later.  In this event, the video recorder should also set the start_time for the stream appropriately.   Some video recorders don't and this will throw off TRIM and VCAP.
 
-### trim [video]
+### `trim [video]`
 
 This process is optional but recommended to save space.  Chances are you don't want to save **all** of the video you recorded.  It operates much like REMUX in that the streams are still copied into the same container type they were found in, but TRIM will only copy the video between the In- and Out-Points you specify.
 
@@ -33,7 +33,7 @@ No adjustment is necessary for Out-Points, though it should be noted that VCAP v
 
 Additional note: No, you cannot simply copy the adjusted In- and Out-Points for use later.  I tried.  It failed.  The resulting time stamps will be slightly different.
 
-### set [video]
+### `set [video]`
 
 This is where you define your clips properties.
 
@@ -65,29 +65,29 @@ This is where you define your clips properties.
 
 > This records the adjustment necessary to normalize audio to 0dB.
 
-### preview
+### `preview`
 
 If you made no changes to your video's framerate or color range, do not use this step.  The VCAP process is much quicker.  This step applies all video and audio settings and outputs a low-quality preview at PVWIDExPVHIGH resolution.  Quality is of minimal concern at this point.  Getting a preview of your settings is.
 
-### vcap (Video Copied Audio Processed)
+### `vcap` (Video Copied, Audio Processed)
 
 This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be usued in place of PREVIEW.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.
 
-### youtube
+### `youtube`
 
 This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  All filters are applied and video is output at a CRF of 20, which should guarantee a bit rate of at least 12Mb/s (and use more if your video needs it).  Processing can take a while.
 
-### join [video|vc] [video|vc] ...
+### `join [video|vc] [video|vc] ...`
 
 This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by SET to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in SET.
 
 Video will be created sequentially -- join0001.mkv, join0002.mkv, etc.  You can process clips ahead of time using LOSSLESS, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
 
-### lossless
+### `lossless`
 
 This process creates a lossless video.  It's purpose is to create videos for the JOIN process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply SET these clips like you would any other video, then use filesystem links to refer back to them
 
-### thumb [seconds]
+### `thumb [seconds]`
 
 Take a screenshot from the beginning (positive seconds) or end (negative seconds) of video.
 
@@ -106,9 +106,9 @@ Unsupported Processes
 
 The following functions were created during development and have stagnated.
 
-### csav [video] [audio] (Combine Seperate Audio and Video)
+### `csav [video] [audio]` (Combine Seperate Audio and Video)
 
-Combine the video from [video] with the audio from [audio].
+Combine the video from `[video]` with the audio from `[audio]`.
 
 ### homearch
 
