@@ -191,7 +191,7 @@ case ${1} in
 
     msg 'Trimming original video...'
     ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
-    mv "tmp.${VDOEXT}" "trimmed.${VDOEXT}"
+    mv "tmp.${VDOEXT}" "trim.${VDOEXT}"
     msg 'Cleaning up.'
     rm original.ifl
 
@@ -200,7 +200,7 @@ case ${1} in
 
     if [ -s ${SCRPNM}.cfg ]; then
       grep -v 'VDOFIL\|VIP_TC\|VOP_TC' ${SCRPNM}.cfg > ${SCRPNM}.tmp
-      echo "VDOFIL=trimmed.${VDOEXT}" >> ${SCRPNM}.tmp
+      echo "VDOFIL=trim.${VDOEXT}" >> ${SCRPNM}.tmp
       cp ${SCRPNM}.cfg gpvp.bak
       msg 'Original config saved as gpvp.bak'
       mv ${SCRPNM}.tmp ${SCRPNM}.cfg
@@ -471,7 +471,7 @@ case ${1} in
       FILTER+="[$((${JOINLP} - 1)):v:0] [$((${JOINLP} - 1 )):a:0] "
     done
 
-    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} joined.mp4
+    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} join.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     msg 'Finished combining videos.'
     ;;
@@ -515,6 +515,44 @@ case ${1} in
         fi
       done
     fi
+    ;;
+
+  all)
+
+    shift
+    PROCES="${1}"
+    shift
+
+    case "${PROCES}" in
+      join|lossless|preview|vcap|youtube)
+        FDFILE="vcproc.cfg"
+        ;;
+      remux|set|trim)
+        FDFILE="${1}"
+        ;;
+      *)
+        echo "Can't run ${1} on multiple directories"
+        exit 1
+        ;;
+    esac
+
+    while read -r -d '' LOCATN; do
+      LOCTRM="${LOCATN%/${FDFILE}}"
+      TARGET+=("${LOCTRM#./}")
+    done < <(find . -name "${FDFILE}" -print0)
+
+    CURDIR="$(pwd)"
+    for DRCTRY in "${TARGET[@]}"; do
+      cd "${DRCTRY}"
+      FDFILE="$(ls -U ${PROCES}.{mp4,ts} 2> /dev/null)"
+      if [ "${FDFILE}" == "" ]; then
+        echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
+        "${SCRPNM}" "${PROCES}" $@
+      else
+        echo "${DRCTRY}/${FDFILE} exists -- skipping."
+      fi
+      cd "${CURDIR}"
+    done
     ;;
 
 esac

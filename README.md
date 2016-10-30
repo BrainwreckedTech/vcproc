@@ -13,6 +13,10 @@ Workflow
            +->  set  -+
                       +-  vcap
 
+### all [process] [normal additional arguments]
+
+Execute [process] for each instance of vcproc.cfg (process=join|lossless|preview|vcap|youtube) or [normal additional arguments] (which would only be a file name when process=remux|set|trim) found in the current directory and all subdirectories.  If a [process] file (eg. vcap.mp4 for vcap, remux.ts for remux, etc.) is found, that directory will be skipped on the assumption that the process has already been run.
+
 ### remux [video]
 
 This process might be optional, but there is no harm in running it, it operates almost as fast as your hard drive can copy the data, and it copies the original streams (maintaining their original quality) into the same container type with the time stamps reset to near-zero.
