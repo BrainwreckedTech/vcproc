@@ -433,38 +433,45 @@ case ${1} in
       -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
     ;;
 
-  ytcrdl)
+  join)
 
-    if [ -z ${CDBAIT+X} ] && [ ! -s crdlbait.mkv ]; then
-      msg "Copyright Deadlock Bait is undefined in ${SCRPNM}.cfg and 'crdlbait.mkv' does not exist."
-      exit 1
-    fi 
+    JOINS=0
+    shift
 
-    if [ -s crdlbait.mkv ]; then
-      msg 'Copyright Deadlock Bait already exists.'
-    else
-      msg 'Converting Copyright Deadlock Bait...'
-      ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
-        -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 crdlbait.mkv
-      [[ $? != 0 ]] && msg 'Error creating Copyright Deadlock bait.' && exit 1
-      msg 'Finished Copyright Deadlock Bait.'
-    fi
+    while test $# -gt 0; do
+      ((JOINS++))
+      JOINSF=$(printf "%04d" $JOINS)
+      if [ -s join${JOINSF}.mkv ]; then
+        echo "Lossless copy of ${1} exists.  Skipping."
+      else  
+        if [ "${1}" == "vc" ]; then
+          msg 'Creating lossless video clip...'
+          ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+            -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
+            -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
+          [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
+          msg 'Finished lossless copy.'
+        else
+          msg "Creating lossless copy of ${1}..."
+          ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
+            -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 join${JOINSF}.mkv
+          [[ $? != 0 ]] && msg "Error creating copy of ${1}." && exit 1
+          msg "Created lossless copy of ${1}."
+       fi
+      fi
+      shift
+    done
 
-    if [ -s lossless.mkv ]; then
-      msg 'Lossless copy of video clip already exists.'
-    else
-      msg 'Creating lossless video clip...'
-      ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
-        -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
-        -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
-      [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
-      msg 'Finished lossless copy.'
-    fi
+    msg 'Combining videos...'
 
-    msg 'Combining original video with Copyright Deadlock bait...'
-    ffmpeg ${FFOPTS} -i lossless.mkv -i crdlbait.mkv -filter_complex "[0:v:0] [0:a:0] [1:v:0] [1:a:0] concat=n=2:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} you_tube.mp4
-    [[ $? != 0 ]] && msg 'Error combining original video with Copyright Deadlock bait.' && exit 1
-    msg 'Finished combining original video with Copyright Deadlock bait...'
+    for ((JOINLP=1; JOINLP<=JOINS; JOINLP++)); do
+      JFILES+="-i join$(printf "%04d" ${JOINLP}).mkv "
+      FILTER+="[$((${JOINLP} - 1)):v:0] [$((${JOINLP} - 1 )):a:0] "
+    done
+
+    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} joined.mp4
+    [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
+    msg 'Finished combining videos.'
     ;;
 
   csav)
