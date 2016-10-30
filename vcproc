@@ -426,9 +426,7 @@ case ${1} in
 
   lossless)
 
-    set -x
-
-    ffmpeg ${lsFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
       -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
       -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
     ;;
