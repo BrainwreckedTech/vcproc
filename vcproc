@@ -123,8 +123,8 @@ case ${1} in
     mv "tmp.${VDOEXT}" "remux.${VDOEXT}"
     msg 'Remuxing complete.'
 
-    read -r -p "Delete ${VDOFIL}? [y/N] " DELFIL
-    [[ "${DELFIL}" == "Y" || "${DELFIL}" == "y" ]] && rm "${VDOFIL}"
+#    read -r -p "Delete ${VDOFIL}? [y/N] " DELFIL
+#    [[ "${DELFIL}" == "Y" || "${DELFIL}" == "y" ]] && rm "${VDOFIL}"
     ;;
 
   trim)
@@ -198,8 +198,8 @@ case ${1} in
     msg 'Cleaning up.'
     rm original.ifl
 
-    read -r -p "Delete ${VDOFIL}? [y/N] " DELFIL
-    [[ "${DELFIL,,}" == "y" ]] && rm "${VDOFIL}"
+#    read -r -p "Delete ${VDOFIL}? [y/N] " DELFIL
+#    [[ "${DELFIL,,}" == "y" ]] && rm "${VDOFIL}"
 
     if [ -s ${SCRPNM}.cfg ]; then
       grep -v 'VDOFIL\|VIP_TC\|VOP_TC' ${SCRPNM}.cfg > ${SCRPNM}.tmp
