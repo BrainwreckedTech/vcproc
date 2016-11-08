@@ -474,8 +474,9 @@ case ${1} in
       FILTER+="[$((${JOINLP} - 1)):v:0] [$((${JOINLP} - 1 )):a:0] "
     done
 
-    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} join.mp4
+    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} temp.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
+    mv temp.mp4 join.mp4
     msg 'Finished combining videos.'
     ;;
 
