@@ -382,11 +382,20 @@ case ${1} in
       -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
     msg "Finished creating vcap.${VDOEXT}."
 
+#    THIS COMMENTED CODE CONDENSES THE CODE ABOVE AND BELOW INTO ONE PROCESS
+#    HOWEVER, I FOUND ONE VIDEO WHOSE SOUND SKIPPED AHEAD BY 1-2 SECONDS,
+#    15-20 SECONDS BEFORE THE END OF THE VIDEO
+
+#    msg "Creating video from $(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}") in ${VDOFIL}..."
+#    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -af ${A_FLTR} \
+#      -c:a aac ${YTASET} -shortest -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart temp.mp4
+#    mv temp.mp4 vcap.mp4
+#    msg 'Finished creating vcap.mp4.'
+
     msg "Remuxing ${VDOEXT} to mp4..."
     ffmpeg ${FFOPTS} -i "vcap.${VDOEXT}" -c:v copy -c:a copy -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart vcap.mp4
     msg 'Remuxing complete, cleaning up.'
-    rm "vcap.${VDOEXT}" vcap.ifl
-
+    rm vcap.{ifl,${VDOEXT}}
     ;;
 
   youtube)
