@@ -404,7 +404,7 @@ case ${1} in
       msg 'Gathering video information...'
       ORGRES="$(mediainfo "${VDOFIL}" | grep 'Width\|Height' | cut -d: -f2 | tr '\n' 'x' | sed 's/ //g;s/pixels//g;s/x$//g')"
       BR_HRF=$(mediainfo "${VDOFIL}" | grep 'bit rate' | grep -vi 'maximum\|mode' | cut -d: -f2 | sed 's: ::g')
-      BRMATH="$(echo "${BR_HRF}" | sed 's:Mb/s: \* 1000000:g')"
+      BRMATH="${BR_HRF%Mb/s} * 1000000"
       BR_BPS=$(bc <<< "${BRMATH}" | sed 's/\.0$//g')
       BRRDCH=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 12000000 / ${BR_BPS} * 100 + 0.005"))
       BRRDCL=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 18000000 / ${BR_BPS} * 100 + 0.005"))
@@ -424,7 +424,7 @@ case ${1} in
         msg 'Resolution coversion detected'
       fi
 
-      msg "Size reduction will be ${BCRDCL}% to ${BCRDCH}%"
+      msg "Size reduction will be ${BRRDCL}% to ${BRRDCH}%"
       (( $(bc <<< "${BRRDCL} < 25") )) && ((REFUSE++))
 
       if [ ${REFUSE} -ge 3 ]; then
