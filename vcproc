@@ -65,8 +65,8 @@ function list_video_files {
 }
 
 if [ -s ${SCRPNM}.cfg ]; then
-  tr -d '\r' < ${SCRPNM}.cfg > gpvp.unix
-  mv gpvp.unix ${SCRPNM}.cfg
+  tr -d '\r' < ${SCRPNM}.cfg > ${SCRPNM}.unix
+  mv ${SCRPNM}.unix ${SCRPNM}.cfg
 
   while IFS='= ' read -r lhs rhs; do
     if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
