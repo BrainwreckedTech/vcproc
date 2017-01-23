@@ -4,14 +4,15 @@ vcproc - Video Clip Processor
 Workflow
 --------
 
-           +-> remux
-           |     |
-           |     ∨
-    START -+-> trim
-           |     |
-           |     ∨    +- preview -> youtube
-           +->  set  -+
-                      +-  vcap
+           +-> remux ->+
+           |     |     |
+           |     ∨     |
+    START -+-> trim    ∨
+           |     |     |          +-> preview ->-+-> youtube
+           |     ∨     |          |              |
+           +-->--+-->--+--> set ->+              | 
+                                  |              |
+                                  +--> vcap -->--+-> join
 
 ### `all [process] [normal additional arguments]`
 
@@ -35,7 +36,7 @@ Additional note: No, you cannot simply copy the adjusted In- and Out-Points for 
 
 ### `set [video]`
 
-This is where you define your clips properties.
+This is where you define your clips properties.  The steps are now taken care of via dialog.  Behind the scenes, this is what is being written to the config file:
 
 > #### VDOFIL
 
@@ -51,11 +52,11 @@ This is where you define your clips properties.
 
 > #### MTLEAD, MTLAST (Mute Lead, Mute Last)
 
-> Allows you to mute the first/last [x] seconds of audio.
+> Allows you to mute the first/last [x] seconds of audio.  Currently, MTLAST is non-functional.
 
 > #### IPCRNG, OPCRNG (Input Color Range, Output Color Range)
 
-> There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Game consoles output to tv/mpeg unless you set them to use pc/full/jpeg.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays 
+> There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Xbox 360 defaults to RGB (full), with the option to switch to YCbCr (mpeg).  PS3 always uses RGB (full) for games.  PS4 defaults to RGB Range: Limited with the option to change it to RGB Range: Full.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays 
 
 > #### PVWIDE, PVHIGH (Preview Width, Preview Height)
 
@@ -73,9 +74,11 @@ If you made no changes to your video's framerate or color range, do not use this
 
 This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be usued in place of PREVIEW.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.
 
-### `youtube`
+### `youtube [force]`
 
 This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  All filters are applied and video is output at a CRF of 20, which should guarantee a bit rate of at least 12Mb/s (and use more if your video needs it).  Processing can take a while.
+
+If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, vcproc will refuse to process the video unless you add `force` as an argument.
 
 ### `join [video|vc] [video|vc] ...`
 
