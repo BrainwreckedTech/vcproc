@@ -14,6 +14,7 @@ CLBOLD="$(tput bold)"
 CLNORM="$(tput sgr0)"
 FFOPTS="-y -v fatal -stats"
 SCRPNM="$(basename "${0}")"
+TMPDIR="/tmp/vcproc-${USER}"
 
 grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
 grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
@@ -64,9 +65,11 @@ function list_video_files {
   echo "$(find -maxdepth 1 -regextype posix-extended -regex '\.\/[[:print:]]+\.(3gp|3g2|asf|avi|divx|evo|f4v|flv|m2p|mkv|mka|mks|mcf|mp4|mov|mpeg|mpg|mxf|ogg|ps|ts|qt|rmvb|vob|webm|wma|wmv)' | sed 's:^\./::g')"
 }
 
+mkdir -p "${TMPDIR}"
+
 if [ -s ${SCRPNM}.cfg ]; then
-  tr -d '\r' < ${SCRPNM}.cfg > ${SCRPNM}.unix
-  mv ${SCRPNM}.unix ${SCRPNM}.cfg
+  tr -d '\r' < ./${SCRPNM}.cfg > ${TMPDIR}/${SCRPNM}.unix
+  mv ${TMPDIR}/${SCRPNM}.unix ./${SCRPNM}.cfg
 
   while IFS='= ' read -r lhs rhs; do
     if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
@@ -166,10 +169,10 @@ case ${1} in
       RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
       msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
-      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > original.ift
+      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/original.ift
       msg 'Generation completed.'
 
-      [ -s original.ift ] && break
+      [ -s ${TMPDIR}/original.ift ] && break
     done
 
     STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
@@ -177,18 +180,18 @@ case ${1} in
 
     while read -r FRAME; do
       bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
-    done < original.ift > original.ifl
-    rm original.ift
+    done < ${TMPDIR}/original.ift > ${TMPDIR}/original.ifl
+    rm ${TMPDIR}/original.ift
     msg 'I-frame list generation complete.'
 
     msg "Calculating closest I-frame before in-point less two seconds..."
-    cp original.ifl original.ifc
-    bc <<< "${VIPSEC} - 2" >> original.ifc
-    sort -n original.ifc > original.ifs
-    rm original.ifc
-    TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC} - 2")" original.ifs | head -1 | tr -d '\n')
+    cp ${TMPDIR}/original.ifl ${TMPDIR}/original.ifc
+    bc <<< "${VIPSEC} - 2" >> ${TMPDIR}/original.ifc
+    sort -n ${TMPDIR}/original.ifc > ${TMPDIR}/original.ifs
+    rm ${TMPDIR}/original.ifc
+    TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC} - 2")" ${TMPDIR}/original.ifs | head -1 | tr -d '\n')
     msg "Closest I-frame before ${VIPSEC}s is ${TIPSEC}s"
-    rm original.ifs
+    rm ${TMPDIR}/original.ifs
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
@@ -196,17 +199,17 @@ case ${1} in
     ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
     mv "tmp.${VDOEXT}" "trim.${VDOEXT}"
     msg 'Cleaning up.'
-    rm original.ifl
+    rm ${TMPDIR}/original.ifl
 
 #    read -r -p "Delete ${VDOFIL}? [y/N] " DELFIL
 #    [[ "${DELFIL,,}" == "y" ]] && rm "${VDOFIL}"
 
     if [ -s ${SCRPNM}.cfg ]; then
-      grep -v 'VDOFIL\|VIP_TC\|VOP_TC' ${SCRPNM}.cfg > ${SCRPNM}.tmp
-      echo "VDOFIL=trim.${VDOEXT}" >> ${SCRPNM}.tmp
-      cp ${SCRPNM}.cfg gpvp.bak
-      msg 'Original config saved as gpvp.bak'
-      mv ${SCRPNM}.tmp ${SCRPNM}.cfg
+      grep -v 'VDOFIL\|VIP_TC\|VOP_TC' ${SCRPNM}.cfg > ${TMPDIR}/${SCRPNM}.tmp
+      echo "VDOFIL=trim.${VDOEXT}" >> ${TMPDIR}/${SCRPNM}.tmp
+      mv ${SCRPNM}.cfg ${SCRPNM}.bak
+      msg 'Original config saved as ${SCRPNM}.bak'
+      mv ${TMPDIR}/${SCRPNM}.tmp ./${SCRPNM}.cfg
       msg "New config saved.  You will have to redo Video In/Out Points with ${SCRPNM} set."
     fi
 
@@ -222,7 +225,7 @@ case ${1} in
       read -p "Do you want to copy this setting from existing ${SCRPNM}.cfg? [y/N] " RESULT
       if [ "${RESULT,,}" == "y" ]; then
         eval "$(printf '%q' "${SETING}")"
-        echo "${SETING}" >> ${SCRPNM}.tmp
+        echo "${SETING}" >> ${TMPDIR}/${SCRPNM}.tmp
       else
         return  1
       fi
@@ -242,7 +245,7 @@ case ${1} in
     fi
 
     VDOEXT="${VDOFIL##*.}"
-    echo "VDOFIL=${VDOFIL#$(pwd)/}" > ${SCRPNM}.tmp
+    echo "VDOFIL=${VDOFIL#$(pwd)/}" > ${TMPDIR}/${SCRPNM}.tmp
 
     if [ -z ${OPWIDE+X} ] && [ -z ${OPHIGH+X} ] && [ -z ${FRMRAT+X} ] && [ -z ${VDODAR+X} ]; then
       HLPMSG='These properties were auto-detected.  Please verify them.'
@@ -257,7 +260,7 @@ case ${1} in
     OPWIDE=${SPROP1%-*};   OPHIGH=${SPROP1#*-}
     FRMRAT=${SPROP2%-*};   VDODAR=${SPROP2#*-}
 
-    echo -e "OPWIDE=${OPWIDE}\nOPHIGH=${OPHIGH}\nFRMRAT=${FRMRAT}\nVDODAR=${VDODAR}" >> ${SCRPNM}.tmp
+    echo -e "OPWIDE=${OPWIDE}\nOPHIGH=${OPHIGH}\nFRMRAT=${FRMRAT}\nVDODAR=${VDODAR}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if [ -z ${VIP_TC+X} ] && [ -z ${VOP_TC+X} ]; then
       HLPMSG="Enter time codes in HH:MM:SS.mmm format."
@@ -274,8 +277,8 @@ case ${1} in
       ${DLGBIN} --title 'OOPS!' --msgbox 'Invalid time code for in/out points.  Try again.' 0 0
     done
 
-    VIP_TC=${TM_CDS%-*}; echo "VIP_TC=${VIP_TC}" >> ${SCRPNM}.tmp
-    VOP_TC=${TM_CDS#*-}; echo "VOP_TC=${VOP_TC}" >> ${SCRPNM}.tmp
+    VIP_TC=${TM_CDS%-*}; echo "VIP_TC=${VIP_TC}" >> ${TMPDIR}/${SCRPNM}.tmp
+    VOP_TC=${TM_CDS#*-}; echo "VOP_TC=${VOP_TC}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if [ -z ${MTLEAD+X} ] && [ -z ${MTLAST+X} ]; then
       MTLEAD=0
@@ -284,8 +287,8 @@ case ${1} in
 
     HLPMSG='If you want to mute the audio at the beginning or end of the video, enter length of time here in seconds.'
     MUTSET="$(${DLGBIN} --stdout --title 'Mute Setting' --form "${HLPMSG}" 0 0 0 "Mute first seconds of audio:" 1 1 "${MTLEAD}" 1 30 5 0 " Mute last seconds of audio:" 2 1 "${MTLAST}" 2 30 5 0 | tr '\n' '-' | sed 's/-$//g' )"
-    echo "MTLEAD=${MUTSET%-*}" >> ${SCRPNM}.tmp
-    echo "MTLAST=${MUTSET#*-}" >> ${SCRPNM}.tmp
+    echo "MTLEAD=${MUTSET%-*}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo "MTLAST=${MUTSET#*-}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if [ "${IPCRNG}" == pc ]; then
       TVSLCT=off; PCSLCT=on
@@ -295,7 +298,7 @@ case ${1} in
 
     HLPMSG="What is the luma range in the source?\n\nOptical media typically uses Limited RGB.\n\nGame consoles output to Limited RGB unless you set them to use Full RGB.\n\nYou can take a snapshot from a video player and analyze the levels in an image editor if you are not sure."
     IPCRNG=$(${DLGBIN} --stdout --backtitle "Source Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
-    echo "IPCRNG=${IPCRNG}" >> ${SCRPNM}.tmp
+    echo "IPCRNG=${IPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if [ "${OPCRNG}" == pc ]; then
       TVSLCT=off; PCSLCT=on
@@ -305,7 +308,7 @@ case ${1} in
 
     HLPMSG="What is the luma range you would like in the output?\n\nLimited RGB will look slightly washed out on computer displays but fine on video displays.\n\nFull RGB will crush shadows and lights on video displays but look fine on computer displays."
     OPCRNG=$(${DLGBIN} --stdout --backtitle "Output Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
-    echo "OPCRNG=${OPCRNG}" >> ${SCRPNM}.tmp
+    echo "OPCRNG=${OPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     case "${PVWIDE}x${PVHIGH}" in
       '768x432') SELDAR=off; SEL169=on; SLCT43=off; break;;
@@ -315,16 +318,16 @@ case ${1} in
 
     HLPMSG="The preview video should be small (approx. 480p).\n\nCorrect way: Use the DVD standard 720x480 and set the DAR accordingly.\n\nCompatible way: Use 768x432 or 640x480 because some video players will not apply DAR correctly."
     OP_RES=$(${DLGBIN} --stdout --backtitle "Preview Size" --radiolist "${HLPMSG}" 0 0 3 '720x480' 'Use DAR (345600 pixels)' "${SELDAR}" '768x432' '1:1 for 16:9 (331776 pixels)' "${SEL169}" '640x480' '1:1 for 4:3 (307200 pixels)' "${SLCT43}")
-    echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> ${SCRPNM}.tmp
+    echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if ! ask_copy_cfg 'ADPEAK'; then
       ${DLGBIN} --infobox "\n Determining peak audio level..." 5 38
       ADPEAK="$(ffmpeg -ss ${VIP_TC} -i "${VDOFIL}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
-      echo "ADPEAK=${ADPEAK}" >> ${SCRPNM}.tmp
+      echo "ADPEAK=${ADPEAK}" >> ${TMPDIR}/${SCRPNM}.tmp
       ${DLGBIN} --msgbox "\n Peak audio level of -${ADPEAK}dB added to config." 7 51
     fi
 
-    sort -u ${SCRPNM}.tmp > ${SCRPNM}.cfg; rm ${SCRPNM}.tmp
+    sort -u ${TMPDIR}/${SCRPNM}.tmp > ./${SCRPNM}.cfg; rm ${TMPDIR}/${SCRPNM}.tmp
     ;;
 
   preview)
@@ -351,10 +354,10 @@ case ${1} in
       RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
       msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
-      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > vcap.ift
+      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/vcap.ift
       msg 'Generation completed.'
 
-      [ -s vcap.ift ] && break
+      [ -s ${TMPDIR}/vcap.ift ] && break
     done
 
     STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
@@ -362,18 +365,18 @@ case ${1} in
 
     while read -r FRAME; do
       bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
-    done < vcap.ift > vcap.ifl
-    rm vcap.ift
+    done < ${TMPDIR}/vcap.ift > ${TMPDIR}/vcap.ifl
+    rm ${TMPDIR}/vcap.ift
     msg 'I-frame list generation complete.'
 
     msg "Calculating closest I-frame after in-point..."
-    cp vcap.ifl vcap.ifc
-    echo "${VIPSEC}" >> vcap.ifc
-    sort -n vcap.ifc > vcap.ifs
-    rm vcap.ifc
-    TIPSEC=$(grep -A 1 "${VIPSEC}" vcap.ifs | tail -1 | tr -d '\n')
+    cp ${TMPDIR}/vcap.ifl ${TMPDIR}/vcap.ifc
+    echo "${VIPSEC}" >> ${TMPDIR}/vcap.ifc
+    sort -n ${TMPDIR}/vcap.ifc > ${TMPDIR}/vcap.ifs
+    rm ${TMPDIR}/vcap.ifc
+    TIPSEC=$(grep -A 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | tail -1 | tr -d '\n')
     msg "Closest I-frame after ${VIPSEC}s is ${TIPSEC}s"
-    rm vcap.ifs
+    rm ${TMPDIR}/vcap.ifs
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
@@ -395,7 +398,8 @@ case ${1} in
     msg "Remuxing ${VDOEXT} to mp4..."
     ffmpeg ${FFOPTS} -i "vcap.${VDOEXT}" -c:v copy -c:a copy -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart vcap.mp4
     msg 'Remuxing complete, cleaning up.'
-    rm vcap.{ifl,${VDOEXT}}
+    rm ${TMPDIR}/vcap.ifl
+    rm vcap.${VDOEXT}
     ;;
 
   youtube)
