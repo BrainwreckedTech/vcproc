@@ -431,7 +431,7 @@ case ${1} in
 
     msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
-      -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 22 ${OPSET2} \
+      -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
     msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
     ;;
