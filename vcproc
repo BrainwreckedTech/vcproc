@@ -405,39 +405,6 @@ case ${1} in
 
   youtube)
 
-    if [ "${2}" != "force" ]; then
-      msg 'Gathering video information...'
-      ORGRES="$(mediainfo "${VDOFIL}" | grep 'Width\|Height' | cut -d: -f2 | tr '\n' 'x' | sed 's/ //g;s/pixels//g;s/x$//g')"
-      BR_HRF=$(mediainfo "${VDOFIL}" | grep 'bit rate' | grep -vi 'maximum\|mode' | cut -d: -f2 | sed 's: ::g')
-      BRMATH="${BR_HRF%Mb/s} * 1000000"
-      BR_BPS=$(bc <<< "${BRMATH}" | sed 's/\.0$//g')
-      BRRDCH=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 12000000 / ${BR_BPS} * 100 + 0.005"))
-      BRRDCL=$(printf '%04.2f' $(bc <<< "scale=6; 100 - 18000000 / ${BR_BPS} * 100 + 0.005"))
-      REFUSE=0
-
-      if [ "${IPCRNG}" == "${OPCRNG}" ]; then
-        msg 'Color Range will remain the same.'
-        ((REFUSE++))
-      else
-        msg 'Color Range conversion detected.'
-      fi
-
-      if [ "${ORGRES}" == "${OPWIDE}x${OPHIGH}" ]; then
-        msg 'Resolution will remain the same'
-        ((REFUSE++))
-      else
-        msg 'Resolution coversion detected'
-      fi
-
-      msg "Size reduction will be ${BRRDCL}% to ${BRRDCH}%"
-      (( $(bc <<< "${BRRDCL} < 25") )) && ((REFUSE++))
-
-      if [ ${REFUSE} -ge 3 ]; then
-        msg "REFUSAL: Nothing to gain here. Try '${SCRPNM} vcap' or '${SCRPNM} youtube force'"
-        exit 1
-      fi
-    fi
-
     msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
       -vf ${V_FLTR} -c:v libx264 ${OPVSET} ${YTVSET} \
