@@ -106,6 +106,20 @@ if [ -s ${SCRPNM}.cfg ]; then
   YTASET="-strict 2 -b:a 384k -r:a 48000"
 fi
 
+[[ ! -s ${1}.mp4 ]] && touch ${1}.mp4
+
+if [[ "|portable|youtube|" == *"|${1}|"* ]]; then
+  if [ -z ${USETMP+X} ]; then
+    WRKFIL="${VDOFIL}"
+    OUTFIL="${1}.mp4"
+  else
+    WRKFIL="${TMPDIR}/${VDOFIL}"
+    OUTFIL="${TMPDIR}/${1}.mp4"
+    msg "Copying ${VDOFIL} to ${WRKFIL}..."
+    cp "${VDOFIL}" "${WRKFIL}"
+  fi
+fi
+
 case ${1} in
 
   remux)
@@ -407,18 +421,18 @@ case ${1} in
   youtube)
 
     msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
-    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 22 ${YTVSET} ${OPSET2} \
-      -af ${A_FLTR} -c:a aac ${YTASET} youtube.mp4
+      -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
     msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
     ;;
 
   portable)
 
     msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
-    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 22 ${OPSET2} \
-      -af ${A_FLTR} -c:a aac ${YTASET} portable.mp4
+      -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
     msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
     ;;
 
@@ -553,3 +567,12 @@ case ${1} in
     ;;
 
 esac
+
+if [[ "|portable|youtube|" == *"|${1}|"* ]]; then
+  if [ ! -z ${USETMP+X} ]; then
+    msg "Moving ${OUTFIL} to ${1}.mp4"
+    mv "${OUTFIL}" ${1}.mp4
+    msg 'Cleaning up...'
+    rm "${WRKFIL}"
+  fi
+fi
