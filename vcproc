@@ -361,6 +361,7 @@ case ${1} in
     done
 
     STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
+    [ "${STRTTM}" == "" ] && STRTTM=0
     msg "Stream time stamps start at ${STRTTM}s -- adjusting time stamps..."
 
     while read -r FRAME; do
