@@ -100,8 +100,9 @@ if [ -s ${SCRPNM}.cfg ]; then
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$(bc <<< "${VOPSEC} - ${VIPSEC}")
   [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ] && A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,${MTLEAD})':volume=0"
 
-  OPVSET="-preset slower -refs 12"
-  YTVSET="-crf 20 -bf 2 ${GOPLEN} -flags +cgop -pix_fmt yuv420p -movflags faststart -profile:v high -level 4.2"
+  OPSET1="-preset slower -refs 12"
+  YTVSET="-bf 2 ${GOPLEN} -flags +cgop -movflags faststart"
+  OPSET2="-pix_fmt yuv420p -profile:v high -level 4.2"
   YTASET="-strict 2 -b:a 384k -r:a 48000"
 fi
 
@@ -407,7 +408,7 @@ case ${1} in
 
     msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
-      -vf ${V_FLTR} -c:v libx264 ${OPVSET} ${YTVSET} \
+      -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 22 ${YTVSET} ${OPSET2}\
       -af ${A_FLTR} -c:a aac ${YTASET} youtube.mp4
     msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
     ;;
@@ -455,7 +456,9 @@ case ${1} in
       FILTER+="[$((${JOINLP} - 1)):v:0] [$((${JOINLP} - 1 )):a:0] "
     done
 
-    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" -map "[v]" -map "[a]" -c:v libx264 ${OPVSET} ${YTVSET} -c:a aac ${YTASET} temp.mp4
+    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" \
+      -map "[v]" -map "[a]" -c:v libx264 ${OPSET1} -crf 22 ${YTVSET} ${OPSET2} \
+      -c:a aac ${YTASET} temp.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     mv temp.mp4 join.mp4
     msg 'Finished combining videos.'
