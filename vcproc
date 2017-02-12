@@ -396,7 +396,7 @@ case ${1} in
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
-    msg "Creating video from $(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}") in ${VDOFIL}..."
+    msg "Creating video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
     ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy \
       -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
     msg "Finished creating vcap.${VDOEXT}."
@@ -420,20 +420,20 @@ case ${1} in
 
   youtube)
 
-    msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
+    msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 22 ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
-    msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
+    msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${WRKFIL}."
     ;;
 
   portable)
 
-    msg "Creating video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
+    msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
-    msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
+    msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${WRKFIL}."
     ;;
 
   lossless)
