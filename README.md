@@ -7,12 +7,29 @@ Workflow
            +-> remux ->+
            |     |     |
            |     ∨     |
-    START -+-> trim    ∨
+    START -+   trim    ∨
            |     |     |          +-> preview ->-+-> youtube
            |     ∨     |          |              |
-           +-->--+-->--+--> set ->+              | 
+           +-->--+-->--+--> set ->+              +-> preview
                                   |              |
                                   +--> vcap -->--+-> join
+
+Video Quality
+-------------
+
+The `youtube` process for `vcproc` uses x264's CRF 22.  While the idea was to hit Youtube's recommended bitrate of 12Mb/s, CRF has a wide range which depends on the compressability of the video.  CRF 22 has a range of -25% to +50% of the target 12Mb/s.
+
+| CRF | Min bitrate | Max bitrate | Avg bitrate |
+|-------------------|-------------|-------------|
+|  19 |  13.10Mb/s  |  23.57Mb/s, |  18.97Mb/s  |
+|  20 |  11.75Mb/s, |  21.50Mb/s, |  17.17Mb/s  |
+|  21 |  10.53Mb/s, |  19.68Mb/s, |  15.54Mb/s  |
+|  22 |   9.42Mb/s, |  18.10Mb/s, |  14.05Mb/s  |
+
+The `portable` process for `vcproc` uses x264's CRF 29.  This process is intended for mobile devices with higher-density screens (which will lessen the impact of compression artifacts) and limited storage.
+
+VCPROC Processes
+----------------
 
 ### `all [process] [normal additional arguments]`
 
@@ -56,7 +73,7 @@ This is where you define your clips properties.  The steps are now taken care of
 
 > #### IPCRNG, OPCRNG (Input Color Range, Output Color Range)
 
-> There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Xbox 360 defaults to RGB (full), with the option to switch to YCbCr (mpeg).  PS3 always uses RGB (full) for games.  PS4 defaults to RGB Range: Limited with the option to change it to RGB Range: Full.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays 
+> There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Xbox 360 defaults to RGB (full), with the option to switch to YCbCr (mpeg).  PS3 always uses RGB (full) for games.  PS4 defaults to RGB Range: Limited with the option to change it to RGB Range: Full.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays
 
 > #### PVWIDE, PVHIGH (Preview Width, Preview Height)
 
@@ -74,11 +91,11 @@ If you made no changes to your video's framerate or color range, do not use this
 
 This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be usued in place of PREVIEW.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.
 
-### `youtube [force]`
+### `youtube`
 
-This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  All filters are applied and video is output at a CRF of 20, which should guarantee a bit rate of at least 12Mb/s (and use more if your video needs it).  Processing can take a while.
+This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  All filters are applied and video is output at a CRF of 22.  Processing can take a while.
 
-If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, vcproc will refuse to process the video unless you add `force` as an argument.
+If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, try `vcap` instead.
 
 ### `join [video|vc] [video|vc] ...`
 
@@ -116,4 +133,3 @@ Combine the video from `[video]` with the audio from `[audio]`.
 ### homearch
 
 This was meant as an alternative to creating lossless videos.  The only problem is that, for as much data as FFV1+FLAC can pump out, it is surprisingly quick at doing so.  A video that can be encoded in 45 minutes using x264+AAC in about 350MB can be encoded in 15 minutes using FFV1+FLAC in about 6-8 GB.
-
