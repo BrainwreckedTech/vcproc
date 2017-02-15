@@ -39,15 +39,15 @@ Execute `[process]` for each instance of vcproc.cfg (process=join|lossless|previ
 
 This process might be optional, but there is no harm in running it, it operates almost as fast as your hard drive can copy the data, and it copies the original streams (maintaining their original quality) into the same container type with the time stamps reset to near-zero.
 
-If your recorder generates "goofy" timestamps, this step will become necessary.  It will fix all time stamps so the remaining vcproc processes operate properly.  Contrary to popular belief, video doesn't have to start at time code 00:00:00.000.  It is perfectly valid for your first frame to start with a PTS (Presentation Time Stamp) that is something later -- sometimes **a lot** later.  In this event, the video recorder should also set the start_time for the stream appropriately.   Some video recorders don't and this will throw off TRIM and VCAP.
+If your recorder generates "goofy" timestamps, this step will become necessary.  It will fix all time stamps so the remaining vcproc processes operate properly.  Contrary to popular belief, video doesn't have to start at time code 00:00:00.000.  It is perfectly valid for your first frame to start with a PTS (Presentation Time Stamp) that is something later -- sometimes **a lot** later.  In this event, the video recorder should also set the start_time for the stream appropriately.   Some video recorders don't and this will throw off `trim` and `vcap`.
 
 ### `trim [video]`
 
-This process is optional but recommended to save space.  Chances are you don't want to save **all** of the video you recorded.  It operates much like REMUX in that the streams are still copied into the same container type they were found in, but TRIM will only copy the video between the In- and Out-Points you specify.
+This process is optional but recommended to save space.  Chances are you don't want to save **all** of the video you recorded.  It operates much like REMUX in that the streams are still copied into the same container type they were found in, but `trim` will only copy the video between the In- and Out-Points you specify.
 
-Actaully that's a bit of a lie, as TRIM will make two adjustments to your In-Point.  First, it will subtract two seconds because seeking is not accurate and this seems to be enough lead time to get the video you want.  (Oddly enough, during development, cutting on the I-frame directly before the In-Point resulted in video that always started at that point, which of course included up to one I-frame interval's worth of video that was not wanted.)  The second adjustment seeks backwards to the previous I-frame.
+Actaully that's a bit of a lie, as `trim` will make two adjustments to your In-Point.  First, it will subtract two seconds because seeking is not accurate and this seems to be enough lead time to get the video you want.  (Oddly enough, during development, cutting on the I-frame directly before the In-Point resulted in video that always started at that point, which of course included up to one I-frame interval's worth of video that was not wanted.)  The second adjustment seeks backwards to the previous I-frame.
 
-No adjustment is necessary for Out-Points, though it should be noted that VCAP videos will continue to the closest I-frame after the Out-Point.  Processes that re-encode the video (PREVIEW, YOUTUBE, LOSSLESS, JOIN) will stick to the actual In-Point and Out-Point.
+No adjustment is necessary for Out-Points, though it should be noted that `vcap` videos will continue to the closest I-frame after the Out-Point.  Processes that re-encode the video (PREVIEW, YOUTUBE, LOSSLESS, JOIN) will stick to the actual In-Point and Out-Point.
 
 Additional note: No, you cannot simply copy the adjusted In- and Out-Points for use later.  I tried.  It failed.  The resulting time stamps will be slightly different.
 
@@ -85,11 +85,11 @@ This is where you define your clips properties.  The steps are now taken care of
 
 ### `preview`
 
-If you made no changes to your video's framerate or color range, do not use this step.  The VCAP process is much quicker.  This step applies all video and audio settings and outputs a low-quality preview at PVWIDExPVHIGH resolution.  Quality is of minimal concern at this point.  Getting a preview of your settings is.
+If you made no changes to your video's framerate or color range, do not use this step.  The `vcap` process is much quicker.  This step applies all video and audio settings and outputs a low-quality preview at [PVWIDE]x[PVHIGH] resolution.  Quality is of minimal concern at this point.  Getting a preview of your settings is.
 
 ### `vcap` (Video Copied, Audio Processed)
 
-This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be usued in place of PREVIEW.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.
+This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be used in place of PREVIEW.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.
 
 ### `youtube`
 
@@ -111,7 +111,7 @@ This process creates a lossless video.  It's purpose is to create videos for the
 
 Take a screenshot from the beginning (positive seconds) or end (negative seconds) of video.
 
-This process has two beviors:
+This process has two behaviors:
 
 > #### A config file from SET exists.
 
