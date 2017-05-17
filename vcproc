@@ -528,6 +528,16 @@ case ${1} in
     msg 'Finished combining videos.'
     ;;
 
+  splitav)
+
+    [ ! -s "${2}" ] && echo "${2} does not exist or is 0 bytes." && exit 1
+    VDOEXT="${2##*.}"
+    msg "Separating audio and video from ${2}..."
+    ffmpeg ${FFOPTS} -i "${2}" -map 0:v:0 -c:v copy video.${VDOEXT} -map 0:a:0 -c:a copy audio.mp2
+    [[ $? != 0 ]] && msg "Error separating video and audio from ${2}." && exit 1
+    msg "Finished separating video and audio from ${2}."
+    ;;
+
   csav)
 
     msg "Combining video from ${2} with audio from ${3}..."
@@ -579,7 +589,7 @@ case ${1} in
       join|lossless|portable|preview|vcap|youtube)
         FDFILE="vcproc.cfg"
         ;;
-      normalize|remux|set|trim)
+      normalize|remux|set|splitav|trim)
         FDFILE="${1}"
         ;;
       *)
