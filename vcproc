@@ -17,6 +17,11 @@ FFOPTS="-y -v fatal -stats"
 SCRPNM="$(basename "${0}")"
 TMPDIR="/tmp/vcproc-${USER}"
 
+CRPTOP=0
+CRPLFT=0
+CRPBTM=0
+CRPRIT=0
+
 grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
 grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
 ON_WSL=true || ON_WSL=false
@@ -95,7 +100,19 @@ if [ -s ${SCRPNM}.cfg ]; then
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
     GOPLEN="-g $(echo "( ${FRMRAT} + 1 ) / 2" | bc)"
-    V_FLTR="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
+    if [ "${1}" == "dvd" ]; then
+     OPWIDE=720; OPHIGH=480;
+    fi
+    if [ ${CRPTOP} == 0 -a ${CRPLFT} == 0 -a ${CRPBTM} == 0 -a ${CRPRIT} == 0 ]; then
+      CRPFLT=
+    else
+      OVWIDE=$(mediainfo "${VDOFIL}" | grep Width | sed 's/.*: \([[:digit:]]\+\) pixels/\1/g')
+      OVHIGH=$(mediainfo "${VDOFIL}" | grep Height | sed 's/.*: \([[:digit:]]\+\) pixels/\1/g')
+      CRWIDE=$(( ${OVWIDE} - ${CRPLFT} - ${CRPRIT} - 1))
+      CRHIGH=$(( ${OVHIGH} - ${CRPTOP} - ${CRPBTM} - 1))
+      CRPFLT="crop=${CRWIDE}:${CRHIGH}:$((${CRPLFT}+1)):$((${CRPTOP}+1)),"
+    fi
+    V_FLTR="${CRPFLT}scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
   fi
 
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$(bc <<< "${VOPSEC} - ${VIPSEC}")
@@ -279,6 +296,16 @@ case ${1} in
 
     echo -e "OPWIDE=${OPWIDE}\nOPHIGH=${OPHIGH}\nFRMRAT=${FRMRAT}\nVDODAR=${VDODAR}" >> ${TMPDIR}/${SCRPNM}.tmp
 
+    HLPMSG="Video will be expanded to the dimensions you specified earlier.\n\nLeaving the settings at all zeros leaves cropping disabled."
+
+    CRSETS="$(${DLGBIN} --stdout --title 'Crop Settings' --form "${HLPMSG}" 16 36 0 '   Crop Top:' 1 1 "${CRPTOP}" 1 14 5 0 '  Crop Left:' 2 1 "${CRPLFT}" 2 14 5 0 'Crop Bottom:' 3 1 "${CRPBTM}" 3 14 5 0 ' Crop Right:' 4 1 "${CRPRIT}" 4 14 5 0 | tr '\n' '-' | sed 's/-$//g' )"
+
+    CRSET1=${CRSETS%-*-*}; CRSET2=${CRSETS#*-*-}
+    CRPTOP=${CRSET1%-*};   CRPLFT=${CRSET1#*-}
+    CRPBTM=${CRSET2%-*};   CRPRIT=${CRSET2#*-}
+
+    echo -e "CRPTOP=${CRPTOP}\nCRPLFT=${CRPLFT}\nCRPBTM=${CRPBTM}\nCRPRIT=${CRPRIT}" >> ${TMPDIR}/${SCRPNM}.tmp
+
     if [ -z ${VIP_TC+X} ] && [ -z ${VOP_TC+X} ]; then
       HLPMSG="Enter time codes in HH:MM:SS.mmm format."
     else
@@ -409,7 +436,7 @@ case ${1} in
 
       msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
       ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/vcap.ift
-      msg 'Generation completed.'
+      msg "I-frames found at $(cat ${TMPDIR}/vcap.ift | tr '\n' ' ')"
 
       [ -s ${TMPDIR}/vcap.ift ] && break
     done
