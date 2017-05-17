@@ -20,11 +20,11 @@ Video Quality
 The `youtube` process for `vcproc` uses x264's CRF 22.  While the idea was to hit Youtube's recommended bitrate of 12Mb/s, CRF has a wide range which depends on the compressability of the video.  CRF 22 has a range of -25% to +50% of the target 12Mb/s.
 
 | CRF | Min bitrate | Max bitrate | Avg bitrate |
-|-------------------|-------------|-------------|
-|  19 |  13.10Mb/s  |  23.57Mb/s, |  18.97Mb/s  |
-|  20 |  11.75Mb/s, |  21.50Mb/s, |  17.17Mb/s  |
-|  21 |  10.53Mb/s, |  19.68Mb/s, |  15.54Mb/s  |
-|  22 |   9.42Mb/s, |  18.10Mb/s, |  14.05Mb/s  |
+|-----|-------------|-------------|-------------|
+|  19 |  13.10Mb/s  |  23.57Mb/s  |  18.97Mb/s  |
+|  20 |  11.75Mb/s  |  21.50Mb/s  |  17.17Mb/s  |
+|  21 |  10.53Mb/s  |  19.68Mb/s  |  15.54Mb/s  |
+|  22 |   9.42Mb/s  |  18.10Mb/s  |  14.05Mb/s  |
 
 The `portable` process for `vcproc` uses x264's CRF 29.  This process is intended for mobile devices with higher-density screens (which will lessen the impact of compression artifacts) and limited storage.
 
