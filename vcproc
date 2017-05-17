@@ -546,6 +546,14 @@ case ${1} in
     msg "Finished Combining video in ${2} with audio from ${3}."
     ;;
 
+  fixar)
+
+    [ ! -s "${2}" ] && echo "${2} does not exist or is 0 bytes." && exit 1
+    VDOEXT="${2##*.}"
+    ffmpeg ${FFOPTS} -i "${2}" -aspect "${3}" -c copy fixar.${VDOEXT}
+    mv fixar.${VDOEXT} ${2}
+    ;;
+
   homearch)
 
     VDOSET="-c:v libx264 -preset slower -crf 5 -qmin 0 -qmax 10 -refs 12 -bf 16 -profile:v high -level 4.2"
