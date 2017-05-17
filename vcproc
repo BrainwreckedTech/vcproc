@@ -12,6 +12,7 @@ ${MISSDP} && exit 1
 
 CLBOLD="$(tput bold)"
 CLNORM="$(tput sgr0)"
+FFOPTS="-y -v info -stats"
 FFOPTS="-y -v fatal -stats"
 SCRPNM="$(basename "${0}")"
 TMPDIR="/tmp/vcproc-${USER}"
