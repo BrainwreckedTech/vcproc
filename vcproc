@@ -266,7 +266,7 @@ case ${1} in
 
     if [ -z ${OPWIDE+X} ] && [ -z ${OPHIGH+X} ] && [ -z ${FRMRAT+X} ] && [ -z ${VDODAR+X} ]; then
       HLPMSG='These properties were auto-detected.  Please verify them.'
-      eval $(mediainfo "${VDOFIL}" | grep 'Width\|Height\|Display aspect ratio\|Frame rate' | sed 's/ *: /=/g;s/Display aspect ratio/VDODAR/g;s/Frame rate/FRMRAT/g;s/Height/OPHIGH/g;s/Width/OPWIDE/g;s/ pixels//g;s/ FPS//gI;s/ //g;s/(.*)//g;s/\.0\+//g;s|:|/|g')
+      eval $(mediainfo "${VDOFIL}" | grep 'Width\|Height\|Display aspect ratio\|Frame rate' | grep -v 'mode\|spf' | sed 's/ *: /=/g;s/Display aspect ratio/VDODAR/g;s/Frame rate/FRMRAT/g;s/Height/OPHIGH/g;s/Width/OPWIDE/g;s/ pixels//g;s/ FPS//gI;s/ //g;s/(.*)//g;s/\.0\+//g;s|:|/|g')
     else
       HLPMSG='These properties were pulled from existing config.  Please verify them.'
     fi
