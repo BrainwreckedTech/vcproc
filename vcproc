@@ -107,9 +107,10 @@ if [ -s ${SCRPNM}.cfg ]; then
   YTASET="-strict 2 -b:a 384k -r:a 48000"
 fi
 
-[[ ! -s ${1}.mp4 ]] && touch ${1}.mp4
+[[ "|normalize|preview|vcap|youtube|portable|lossless|join|" == *"|${1}|"* ]] && [[ ! -s ${1}.mp4 ]] && touch ${1}.mp4
 
 if [[ "|portable|youtube|" == *"|${1}|"* ]]; then
+  touch ${1}.mp4
   if [ -z ${USETMP+X} ]; then
     WRKFIL="${VDOFIL}"
     OUTFIL="${1}.mp4"
@@ -348,6 +349,8 @@ case ${1} in
 
   preview)
 
+    [ ! -s preview.mkv ] && mv preview.mp4 preview.mkv || rm preview.mp4
+
     T_FLTR=${V_FLTR/${OPWIDE}/${PVWIDE}}
     P_FLTR=${T_FLTR/${OPHIGH}/${PVHIGH}}
 
@@ -438,6 +441,8 @@ case ${1} in
     ;;
 
   lossless)
+
+    [ ! -s lossless.mkv ] && mv lossless.mp4 lossless.mkv || rm lossless.mp4
 
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
       -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
@@ -551,12 +556,12 @@ case ${1} in
     while read -r -d '' LOCATN; do
       LOCTRM="${LOCATN%/${FDFILE}}"
       TARGET+=("${LOCTRM#./}")
-    done < <(find . -name "${FDFILE}" -print0)
+    done < <(find -l -name "${FDFILE}" -print0)
 
     CURDIR="$(pwd)"
     for DRCTRY in "${TARGET[@]}"; do
       cd "${DRCTRY}"
-      FDFILE="$(ls -U ${PROCES}.{mp4,ts} 2> /dev/null)"
+      FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)"
       if [ "${FDFILE}" == "" ]; then
         echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
         "${SCRPNM}" "${PROCES}" $@
