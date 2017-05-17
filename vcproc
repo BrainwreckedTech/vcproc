@@ -351,6 +351,11 @@ case ${1} in
 
     [ ! -s preview.mkv ] && mv preview.mp4 preview.mkv || rm preview.mp4
 
+    case ${2} in
+      ''|*[!0-9]*) msg 'Invalid or no custom duration specified.' ;;
+      *) DURATN=${2} ;;
+    esac
+
     T_FLTR=${V_FLTR/${OPWIDE}/${PVWIDE}}
     P_FLTR=${T_FLTR/${OPHIGH}/${PVHIGH}}
 
