@@ -425,6 +425,8 @@ case ${1} in
 
     [[ ! -s ${SCRPNM}.cfg ]] && msg "File ${SCRPNM}.cfg not found.  Run '${SCRPNM} set' first." && exit 1
 
+    [[ "${2}" == "ifb" ]] && VDOBGN="before" || VDOBGN="after"
+
     VDOEXT="${VDOFIL##*.}"
     VIPSEC=$(tc2sec "${VIP_TC}")
 
@@ -451,13 +453,14 @@ case ${1} in
     rm ${TMPDIR}/vcap.ift
     msg 'I-frame list generation complete.'
 
-    msg "Calculating closest I-frame after in-point..."
+    msg "Calculating closest I-frame ${VDOBGN} in-point..."
     cp ${TMPDIR}/vcap.ifl ${TMPDIR}/vcap.ifc
     echo "${VIPSEC}" >> ${TMPDIR}/vcap.ifc
     sort -n ${TMPDIR}/vcap.ifc > ${TMPDIR}/vcap.ifs
     rm ${TMPDIR}/vcap.ifc
-    TIPSEC=$(grep -A 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | tail -1 | tr -d '\n')
-    msg "Closest I-frame after ${VIPSEC}s is ${TIPSEC}s"
+    [[ ${VDOBGN} == "after" ]] && TIPSEC=$(grep -A 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | tail -1 | tr -d '\n')
+    [[ ${VDOBGN} == "before" ]] && TIPSEC=$(grep -B 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | head -1 | tr -d '\n')
+    msg "Closest I-frame ${VDOBGN} ${VIPSEC}s is ${TIPSEC}s"
     rm ${TMPDIR}/vcap.ifs
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
