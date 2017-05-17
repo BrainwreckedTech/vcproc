@@ -435,10 +435,10 @@ case ${1} in
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
-    msg "Creating video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
-    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy \
-      -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
-    msg "Finished creating vcap.${VDOEXT}."
+#   msg "Creating video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
+#   ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t $(bc <<< "${TRMDUR} - 0.067") -i "${VDOFIL}" -c:v copy \
+#     -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
+#   msg "Finished creating vcap.${VDOEXT}."
 
 #    THIS COMMENTED CODE CONDENSES THE CODE ABOVE AND BELOW INTO ONE PROCESS
 #    HOWEVER, I FOUND ONE VIDEO WHOSE SOUND SKIPPED AHEAD BY 1-2 SECONDS,
@@ -450,11 +450,26 @@ case ${1} in
 #    mv temp.mp4 vcap.mp4
 #    msg 'Finished creating vcap.mp4.'
 
-    msg "Remuxing ${VDOEXT} to mp4..."
-    ffmpeg ${FFOPTS} -i "vcap.${VDOEXT}" -c:v copy -c:a copy -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart vcap.mp4
-    msg 'Remuxing complete, cleaning up.'
-    rm ${TMPDIR}/vcap.ifl
-    rm vcap.${VDOEXT}
+#   msg "Remuxing ${VDOEXT} to mp4..."
+#   ffmpeg ${FFOPTS} -i "vcap.${VDOEXT}" -c:v copy -c:a copy -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart vcap.mp4
+#   msg 'Remuxing complete, cleaning up.'
+#   rm ${TMPDIR}/vcap.ifl
+#   rm vcap.${VDOEXT}
+
+#   PERHAPS I WAS OVER-THINKING THINGS
+#   SINCE THE END RESULT WILL BE MP4, WE CAN GO STRAIGHT TO THAT
+
+    msg "Creating video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
+    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t $(bc <<< "${TRMDUR} - 0.217") -i "${VDOFIL}" -c:v copy \
+      -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.mp4
+    msg "Finished creating vcap.mp4."
+
+#   AND THEN MAKE AN MKV COPY SINCE EDIT LISTS ARE BETTER SUPPORTED THERE
+
+    msg "Creating MKV copy..."
+    ffmpeg ${FFOPTS} -i vcap.mp4 -c copy vcap.mkv
+    msg "Finished creating vcap.mkv."
+
     ;;
 
   youtube)
