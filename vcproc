@@ -347,6 +347,36 @@ case ${1} in
     sort -u ${TMPDIR}/${SCRPNM}.tmp > ./${SCRPNM}.cfg; rm ${TMPDIR}/${SCRPNM}.tmp
     ;;
 
+  normalize)
+
+    [ ! -s normalize.mkv ] && mv normalize.mp4 normalize.mkv || rm normalize.mp4
+
+    VDOEXT="${2##*.}"
+
+    MSSG01="Determining peak audio level..."
+    MSSG02="Normalizing audio..."
+
+    if [ "${INTERACTIVE}" = "0" ]; then
+      msg "${MSSG01}"
+    else
+      ${DLGBIN} --infobox "\n ➞ ${MSSG01}\n   ${MSSG02}" 6 40
+    fi
+
+    ADPEAK="$(ffmpeg -i "${2}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
+    A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,0)':volume=0"
+
+    if [ "${INTERACTIVE}" = "0" ]; then
+      msg "${MSSG02}"
+    else
+      ${DLGBIN} --infobox "\n ✔ ${MSSG01}\n ➞ ${MSSG02}" 6 40
+    fi
+
+    ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a aac ${YTASET} normalize.mkv
+
+    msg "Finished creating normalize.mkv."
+
+    ;;
+
   preview)
 
     [ ! -s preview.mkv ] && mv preview.mp4 preview.mkv || rm preview.mp4
@@ -549,7 +579,7 @@ case ${1} in
       join|lossless|portable|preview|vcap|youtube)
         FDFILE="vcproc.cfg"
         ;;
-      remux|set|trim)
+      normalize|remux|set|trim)
         FDFILE="${1}"
         ;;
       *)
