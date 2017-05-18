@@ -231,7 +231,7 @@ case ${1} in
         TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC[${LPCNTR}]} - ${SLCKTM}")" ${TMPDIR}/original.ifs | head -1 | tr -d '\n')
         msg "Closest I-frame before ${VIPSEC[${LPCNTR}]}s is ${TIPSEC}s"
         rm ${TMPDIR}/original.ifs
-        TOPSEC=$(( ${VOPSEC[${LPCNTR}]} + ${SLCKTM} ))
+        TOPSEC=$(bc <<< "${VOPSEC[${LPCNTR}]} + ${SLCKTM}")
         TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
         msg "Trimming original video from ${TIPSEC}s for ${TRMDUR}s..."
