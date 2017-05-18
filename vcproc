@@ -192,6 +192,8 @@ case ${1} in
       fi
     done
 
+    OFFSET=0
+
     for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
 
       msg "WORKING ON VIDEO $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}"
@@ -236,14 +238,23 @@ case ${1} in
 
         msg "Trimming original video from ${TIPSEC}s for ${TRMDUR}s..."
         ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
-        mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trim_$(printf "%03d" "$(( ${LPCNTR} + 1 ))").${VDOEXT}"
+
+        while true; do
+          if [ -e ${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT} ]; then
+            ((OFFSET+=1))
+          else
+            break
+          fi
+        done
+
+        mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT}"
         msg 'Cleaning up.'
         rm ${TMPDIR}/original.ifl
 
       done
     done
 
-    [[ ${#VIPSEC[@]} == 1 ]] && rename '_trim_001' '_trim' *_trim_???.*
+    [[ $(( ${#VIPSEC[@]} + ${OFFSET} )) == 1 ]] && rename '_trim_001' '_trim' *_trim_???.*
 
     ;;
 
