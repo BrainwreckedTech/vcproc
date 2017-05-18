@@ -194,7 +194,7 @@ case ${1} in
 
     for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
 
-      msg "WORKING ON VIDEO $(( ${LPCNTR} + 1 )) OF $(( ${#VIPSEC[@]} + 1 ))"
+      msg "WORKING ON VIDEO $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}"
 
       for VDOFIL in "$@"; do
 
