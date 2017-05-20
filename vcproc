@@ -434,9 +434,23 @@ case ${1} in
 
     [[ ! -s ${SCRPNM}.cfg ]] && msg "File ${SCRPNM}.cfg not found.  Run '${SCRPNM} set' first." && exit 1
 
-    [[ "${2}" == "ifb" ]] && VDOBGN="before" || VDOBGN="after"
+    shift
 
-    VDOEXT="${VDOFIL##*.}"
+    VDOEXT="mp4"
+    VDOBGN="after"
+
+    for OPTARG in "${@}"; do
+      case "${OPTARG}" in
+        mkv) shift ; VDOEXT=mkv ;;
+        mp4) shift ; VDOEXT=mp4 ;;
+        ifb) shift ; VDOBGN="before" ;;
+        ifa) shift ; VDOBGN="after" ;;
+        *)   echo "Uknown option ${OPTARG}" ; [[ ! -s vcap.mp4 ]] && rm vcap.mp4 ; exit 1 ;;
+      esac
+    done
+
+    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 vcap.${VDOEXT}
+
     VIPSEC=$(tc2sec "${VIP_TC}")
 
     for IFDRTN in 5 20 35; do
@@ -474,40 +488,10 @@ case ${1} in
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
-#   msg "Creating video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
-#   ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t $(bc <<< "${TRMDUR} - 0.067") -i "${VDOFIL}" -c:v copy \
-#     -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
-#   msg "Finished creating vcap.${VDOEXT}."
-
-#    THIS COMMENTED CODE CONDENSES THE CODE ABOVE AND BELOW INTO ONE PROCESS
-#    HOWEVER, I FOUND ONE VIDEO WHOSE SOUND SKIPPED AHEAD BY 1-2 SECONDS,
-#    15-20 SECONDS BEFORE THE END OF THE VIDEO
-
-#    msg "Creating video from $(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}") in ${VDOFIL}..."
-#    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -af ${A_FLTR} \
-#      -c:a aac ${YTASET} -shortest -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart temp.mp4
-#    mv temp.mp4 vcap.mp4
-#    msg 'Finished creating vcap.mp4.'
-
-#   msg "Remuxing ${VDOEXT} to mp4..."
-#   ffmpeg ${FFOPTS} -i "vcap.${VDOEXT}" -c:v copy -c:a copy -avoid_negative_ts make_zero -bsf:a aac_adtstoasc -movflags faststart vcap.mp4
-#   msg 'Remuxing complete, cleaning up.'
-#   rm ${TMPDIR}/vcap.ifl
-#   rm vcap.${VDOEXT}
-
-#   PERHAPS I WAS OVER-THINKING THINGS
-#   SINCE THE END RESULT WILL BE MP4, WE CAN GO STRAIGHT TO THAT
-
-    msg "Creating video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
+    msg "Creating ${VDOEXT^^} video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
     ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t $(bc <<< "${TRMDUR} - 0.217") -i "${VDOFIL}" -c:v copy \
-      -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.mp4
-    msg "Finished creating vcap.mp4."
-
-#   AND THEN MAKE AN MKV COPY SINCE EDIT LISTS ARE BETTER SUPPORTED THERE
-
-    msg "Creating MKV copy..."
-    ffmpeg ${FFOPTS} -i vcap.mp4 -c copy vcap.mkv
-    msg "Finished creating vcap.mkv."
+      -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
+    msg "Finished creating vcap.${VDOEXT}."
 
     ;;
 

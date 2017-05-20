@@ -133,9 +133,11 @@ If you don't want encode the entire clip (useful if you are checking audio sync)
 
 ### Production
 
-#### `vcap [ifa|ifb]` (Video Copied, Audio Processed)
+#### `vcap [mp4|mkv] [ifa|ifb]` (Video Copied, Audio Processed)
 
 This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be used in place of `preview`.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.
+
+The default video container is `mp4` due to the intention of uploading to YouTube.  However, if you have other plans for the `vcap` file, you may find the `mkv` container is better-supported.
 
 As video splicing without re-encoding requires starting on an I-Frame, your In-Point will not be strictly adhered to.  The default behavior starts the video with closest I-Frame *after* your In-Point (`ifa`).  You can choose to start the video with the closest I-Frame *before* the In-Point with the `ifb` argument.
 
