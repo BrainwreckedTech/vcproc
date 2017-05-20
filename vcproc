@@ -73,9 +73,21 @@ function list_video_files {
 
 mkdir -p "${TMPDIR}"
 
-if [ -s ${SCRPNM}.cfg ]; then
-  tr -d '\r' < ./${SCRPNM}.cfg > ${TMPDIR}/${SCRPNM}.unix
-  mv ${TMPDIR}/${SCRPNM}.unix ./${SCRPNM}.cfg
+CFGFLS=()
+WALKED=
+
+[ -s "${HOME}/.config/vcproc/${SCRPNM}.cfg" ] && CFGFLS+=("${HOME}/.config/vcproc/${SCRPNM}.cfg")
+while true; do
+  [ "${WALKED}" == "${PWD}" ] && break
+  TOWALK="${PWD#${WALKED}/}"
+  WALKIN="${WALKED}/${TOWALK%%/*}"
+  [ -s "${WALKIN}/${SCRPNM}.cfg" ] && CFGFLS+=("${WALKIN}/${SCRPNM}.cfg")
+  WALKED="${WALKIN}"
+done
+
+for VCPCFG in "${CFGFLS[@]}"; do
+  tr -d '\r' < "${VCPCFG}" > ${TMPDIR}/${SCRPNM}.unix
+  mv ${TMPDIR}/${SCRPNM}.unix "${VCPCFG}"
 
   while IFS='= ' read -r lhs rhs; do
     if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
@@ -85,7 +97,7 @@ if [ -s ${SCRPNM}.cfg ]; then
       rhs="${rhs#\"*}"              # Del closing string quotes
       declare $lhs="$rhs"
     fi
-  done < ${SCRPNM}.cfg
+  done < "${VCPCFG}"
 
   if [ ! -z ${VIP_TC+X} ]; then
     istc "${VIP_TC}" || { echo "Invalid Video In Point Time Code. Must be HH:MM:SS.NNN"; exit 1; }
@@ -122,7 +134,7 @@ if [ -s ${SCRPNM}.cfg ]; then
   YTVSET="-bf 2 ${GOPLEN} -flags +cgop -movflags faststart"
   OPSET2="-pix_fmt yuv420p -profile:v high -level 4.2"
   YTASET="-strict 2 -b:a 384k -r:a 48000"
-fi
+done
 
 [[ "|normalize|preview|vcap|youtube|portable|lossless|join|" == *"|${1}|"* ]] && [[ ! -s ${1}.mp4 ]] && touch ${1}.mp4
 
