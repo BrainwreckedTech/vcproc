@@ -139,11 +139,11 @@ This step is intended for upload to YouTube, but is quick enough (due to the lac
 
 As video splicing without re-encoding requires starting on an I-Frame, your In-Point will not be strictly adhered to.  The default behavior starts the video with closest I-Frame *after* your In-Point (`ifa`).  You can choose to start the video with the closest I-Frame *before* the In-Point with the `ifb` argument.
 
-#### `youtube`
+#### `youtube [max30|max40|max50|max60|max70]`
 
-This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  All filters are applied and video is output at a CRF of 22.  Processing can take a while.
+This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, try `vcap` instead.  Processing can take a while, depending on the speed of your computer.
 
-If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, try `vcap` instead.
+The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, or `max70` to change the CRF value to 17, 14, 12, 10, or 9, respectively.  (An option of `max20` would use CRF 21 and would be virtually indistinguishable from CRF 22.  Hence it is not specified.)
 
 #### `join [video|vc] [video|vc] ...`
 
