@@ -14,7 +14,7 @@
 
 ## Video Quality
 
-The `youtube` process for `vcproc` uses x264's CRF 22.  While the idea was to hit Youtube's recommended bitrate of 12Mb/s, CRF has a wide range which depends on the compressability of the video.  CRF 22 has a range of -25% to +50% of the target 12Mb/s.
+The `youtube` and `join` processes for `vcproc` uses x264 with a default CRF of 22.  While the idea was to hit Youtube's recommended bitrate of 12Mb/s, CRF has a wide range which depends on how well the video can be compressed.  CRF 22 has a range of -25% to +50% of the target 12Mb/s.
 
 | CRF | Min bitrate | Max bitrate | Avg bitrate |
 |-----|-------------|-------------|-------------|
@@ -25,6 +25,11 @@ The `youtube` process for `vcproc` uses x264's CRF 22.  While the idea was to hi
 
 The `portable` process for `vcproc` uses x264's CRF 29.  This process is intended for mobile devices with higher-density screens (which will lessen the impact of compression artifacts) and limited storage.
 
+| CRF | Min bitrate | Max bitrate | Avg bitrate |
+|-----|-------------|-------------|-------------|
+|  29 |   3.47Mb/s  |   9.15Mb/s  |   6.31Mb/s  |
+
+
 ## VCPROC Processes
 
 VCPROC has five sets of process: General, Utilities, Pre-Production, Production, and Unsupported.
@@ -33,7 +38,7 @@ VCPROC has five sets of process: General, Utilities, Pre-Production, Production,
 
 #### `all [process] [normal additional arguments]`
 
-Execute `[process]` for each instance of vcproc.cfg (process=join|lossless|preview|vcap|youtube) or `[normal additional arguments]` (which would only be a file name when process=remux|set|trim) found in the current directory and all subdirectories.  If a `[process]` file (eg. vcap.mp4 for vcap, remux.ts for remux, etc.) is found, that directory will be skipped on the assumption that the process has already been run.
+Execute `[process]` for each instance of `vcproc.cfg` (process=join|lossless|preview|vcap|youtube) or `[normal additional arguments]` (which would only be a file name when process=remux|set|trim) found in the current directory and all subdirectories.  If a `[process]` file (eg. `vcap.mp4` for `vcap`, `remux.ts` for `remux`, etc.) is found, that directory will be skipped on the assumption that the process has already been run.
 
 ### Utilities
 
@@ -92,35 +97,27 @@ You can also perform the operation across multiple files.  Each file will be tri
 This is where you define your clips properties.  The steps are now taken care of via dialog.  Behind the scenes, this is what is being written to the config file:
 
 > ##### VDOFIL
-
 > Select the file you wish to operate on.  The file selection dialog can be skipped by providing a file name on the command line.
 
 > ##### OPWIDE, OPHIGH, FRMRAT, VDODAR (Output Width, Output Height, Framerate, Video Display Aspect Ratio)
-
 > These values are auto-detected.  You can change these values if you want to convert your video to something different.
 
 > #####  CRPTOP, CRPLFT, CRPBTM, CRPRIT (Crop Top, Crop Left, Crop Bottom, Crop Right)
-
 > Sets the number of pixels to crop from the top, left, bottom, and right.  Setting all four to zero (the default) disables cropping.  Video will scaled expanded to OPWIDE x OPHIGH
 
 > ##### VIP_TC, VOP_TC (Video In-Point Time Code, Video Out-Point Time Code)
-
 > Set the In- and Out-Points for the video you want to save.
 
 > ##### MTLEAD, MTLAST (Mute Lead, Mute Last)
-
 > Allows you to mute the first/last [x] seconds of audio.  Currently, MTLAST is non-functional.
 
 > ##### IPCRNG, OPCRNG (Input Color Range, Output Color Range)
-
 > There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Xbox 360 defaults to RGB (full), with the option to switch to YCbCr (mpeg).  PS3 always uses RGB (full) for games.  PS4 defaults to RGB Range: Limited with the option to change it to RGB Range: Full.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays
 
 > ##### PVWIDE, PVHIGH (Preview Width, Preview Height)
-
 > This allows you to set the dimensions for the optional PREVIEW step.
 
 > ##### ADPEAK
-
 > This records the adjustment necessary to normalize audio to 0dB.
 
 #### `preview [seconds]`
@@ -149,13 +146,13 @@ The default CRF value used is 22.  However, you can specify one of `max30`, `max
 
 #### `join [video|vc] [video|vc] ...`
 
-This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by SET to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in SET.
+This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by `set` to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in `set`.
 
-Video will be created sequentially -- join0001.mkv, join0002.mkv, etc.  You can process clips ahead of time using LOSSLESS, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
+Video will be created sequentially -- `join0001.mkv`, `join0002.mkv`, etc.  You can process clips ahead of time using `lossless`, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
 
 #### `lossless`
 
-This process creates a lossless video.  It's purpose is to create videos for the JOIN process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply SET these clips like you would any other video, then use filesystem links to refer back to them
+This process creates a lossless video.  It's purpose is to create videos for the `join` process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply `set` these clips like you would any other video, then use filesystem links to refer back to them
 
 ### Unsupported Processes
 
