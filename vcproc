@@ -550,25 +550,41 @@ case ${1} in
     shift
 
     while test $# -gt 0; do
-      ((JOINS++))
-      JOINSF=$(printf "%04d" $JOINS)
-      if [ -s join${JOINSF}.mkv ]; then
-        echo "Lossless copy of ${1} exists.  Skipping."
+      if [[ ${1} == max?? ]]; then
+        case ${1} in
+          max30) CRF=17 ;;  # Actual 29
+          max40) CRF=14 ;;  # Actual 39
+          max50) CRF=12 ;;  # Actual 48
+          max60) CRF=10 ;;  # Actual 60
+          max70) CRF=9  ;;  # Actual 67
+          max*)  echo "${1} is undefined." ; exit 1 ;;
+          *)     CRF=22 ;;
+        esac
       else
-        if [ "${1}" == "vc" ]; then
-          msg 'Creating lossless video clip...'
-          ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
-            -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
-            -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
-          [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
-          msg 'Finished lossless copy.'
+        ((JOINS++))
+        JOINSF=$(printf "%04d" $JOINS)
+        if [ -s join${JOINSF}.mkv ]; then
+          echo "Lossless copy of ${1} exists.  Skipping."
         else
-          msg "Creating lossless copy of ${1}..."
-          ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
-            -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 join${JOINSF}.mkv
-          [[ $? != 0 ]] && msg "Error creating copy of ${1}." && exit 1
-          msg "Created lossless copy of ${1}."
-       fi
+          if [ "${1}" == "vc" ]; then
+            msg 'Creating lossless video clip...'
+            ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+              -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
+              -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
+            [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
+            msg 'Finished lossless copy.'
+          else
+            if [ -s "${1}" ]; then
+              msg "Creating lossless copy of ${1}..."
+              ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
+                -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 join${JOINSF}.mkv
+              [[ $? != 0 ]] && msg "Error creating copy of ${1}." && exit 1
+              msg "Created lossless copy of ${1}."
+            else
+              msg "File '${1}' does not exist or is 0 bytes." && exit 1
+            fi
+          fi
+        fi
       fi
       shift
     done
@@ -581,7 +597,7 @@ case ${1} in
     done
 
     ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" \
-      -map "[v]" -map "[a]" -c:v libx264 ${OPSET1} -crf 22 ${YTVSET} ${OPSET2} \
+      -map "[v]" -map "[a]" -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -c:a aac ${YTASET} temp.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     mv temp.mp4 join.mp4
