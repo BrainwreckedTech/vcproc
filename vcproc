@@ -510,18 +510,16 @@ case ${1} in
   youtube)
 
     case "${2}" in
-      max30) CRF=17 ; break ;;  # Actual 29
-      max40) CRF=14 ; break ;;  # Actual 39
-      max50) CRF=12 ; break ;;  # Actual 48
-      max60) CRF=10 ; break ;;  # Actual 60
-      max70) CRF=9  ; break ;;  # Actual 67
+      max30) CRF=17 ;;  # Actual 29
+      max40) CRF=14 ;;  # Actual 39
+      max50) CRF=12 ;;  # Actual 48
+      max60) CRF=10 ;;  # Actual 60
+      max70) CRF=9  ;;  # Actual 67
       max*)  echo "${2} is undefined." ; exit 1 ;;
       *)     CRF=22 ;;
     esac
 
-    msg "Using CRF of ${CRF}"
-
-    msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
+    msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
     ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
