@@ -686,7 +686,14 @@ case ${1} in
 
     shift
     PROCES="${1}"
+
     shift
+    if [ "${1}" == "dryrun" ]; then
+      DRYRUN=true
+      shift
+    else
+      DRYRUN=false
+    fi
 
     case "${PROCES}" in
       join|lossless|portable|preview|vcap|youtube)
@@ -696,28 +703,45 @@ case ${1} in
         FDFILE="${1}"
         ;;
       *)
-        echo "Can't run ${1} on multiple directories"
+        echo "Can't run ${PROCES} on multiple directories"
         exit 1
         ;;
     esac
 
     while read -r -d '' LOCATN; do
       LOCTRM="${LOCATN%/${FDFILE}}"
-      TARGET+=("${LOCTRM#./}")
-    done < <(find -l -name "${FDFILE}" -print0)
+      TARGET+=("$(stat -c %Y "${LOCTRM#./}/${FDFILE}"):${LOCTRM#./}")
+    done < <(find -name "${FDFILE}" -print0)
 
-    CURDIR="$(pwd)"
-    for DRCTRY in "${TARGET[@]}"; do
-      cd "${DRCTRY}"
-      FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)"
-      if [ "${FDFILE}" == "" ]; then
-        echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
-        "${SCRPNM}" "${PROCES}" $@
-      else
-        echo "${DRCTRY}/${FDFILE} exists -- skipping."
-      fi
-      cd "${CURDIR}"
+    set -f
+    IFS=$'\n' TGTSRT=($(sort <<<"${TARGET[*]}"))
+    unset IFS
+    set +f
+
+    TARGET=()
+    for ELMENT in "${TGTSRT[@]}"; do
+      TARGET+=("${ELMENT#*:}")
     done
+
+    if ${DRYRUN}; then
+      IFS=$'\n'
+      msg 'DRYRUN: The following directories will be worked on:'
+      echo "${TARGET[*]}"
+      unset IFS
+    else
+      CURDIR="$(pwd)"
+      for DRCTRY in "${TARGET[@]}"; do
+        cd "${DRCTRY}"
+        FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)"
+        if [ "${FDFILE}" == "" ]; then
+          echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
+          "${SCRPNM}" "${PROCES}" $@
+        else
+          echo "${DRCTRY}/${FDFILE} exists -- skipping."
+        fi
+        cd "${CURDIR}"
+      done
+    fi
     ;;
 
 esac
