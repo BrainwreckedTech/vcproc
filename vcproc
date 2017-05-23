@@ -101,7 +101,9 @@ while true; do
 done
 
 for VCPCFG in "${CFGFLS[@]}"; do
-  tr -d '\r' < "${VCPCFG}" > ${TMPDIR}/${SCRPNM}.unix
+  tr '\r' '\n' < "${VCPCFG}" > ${TMPDIR}/${SCRPNM}.unix
+  sed -i '/^$/d' ${TMPDIR}/${SCRPNM}.unix
+  touch -d "$(date -R -r "${VCPCFG}")" "${TMPDIR}/${SCRPNM}.unix"
   mv ${TMPDIR}/${SCRPNM}.unix "${VCPCFG}"
 
   while IFS='= ' read -r lhs rhs; do
