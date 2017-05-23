@@ -527,11 +527,12 @@ case ${1} in
   youtube)
 
     case "${2}" in
-      max30) CRF=17 ;;  # Actual 29
-      max40) CRF=14 ;;  # Actual 39
-      max50) CRF=12 ;;  # Actual 48
-      max60) CRF=10 ;;  # Actual 60
-      max70) CRF=9  ;;  # Actual 67
+      max30) CRF=20 ;; # Actual 28.1
+      max40) CRF=17 ;; # Actual 39.0
+      max50) CRF=15 ;; # Actual 47.9
+      max60) CRF=13 ;; # Actual 58.1
+      max70) CRF=11 ;; # Actual 70.3
+      max80) CRF=10 ;; # Actual 77.5
       max*)  echo "${2} is undefined." ; exit 1 ;;
       *)     CRF=22 ;;
     esac
@@ -568,12 +569,13 @@ case ${1} in
 
     while test $# -gt 0; do
       if [[ ${1} == max?? ]]; then
-        case ${1} in
-          max30) CRF=17 ;;  # Actual 29
-          max40) CRF=14 ;;  # Actual 39
-          max50) CRF=12 ;;  # Actual 48
-          max60) CRF=10 ;;  # Actual 60
-          max70) CRF=9  ;;  # Actual 67
+        case "${1}" in
+          max30) CRF=20 ;; # Actual 28.1
+          max40) CRF=17 ;; # Actual 39.0
+          max50) CRF=15 ;; # Actual 47.9
+          max60) CRF=13 ;; # Actual 58.1
+          max70) CRF=11 ;; # Actual 70.3
+          max80) CRF=10 ;; # Actual 77.5
           max*)  echo "${1} is undefined." ; exit 1 ;;
           *)     CRF=22 ;;
         esac
