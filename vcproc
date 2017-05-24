@@ -567,6 +567,8 @@ case ${PROCES} in
   join)
 
     JOINS=0
+    RMCJNS=false
+    CJOINF=()
     shift
 
     while test $# -gt 0; do
@@ -581,6 +583,9 @@ case ${PROCES} in
           max*)  echo "${1} is undefined." ; exit 1 ;;
           *)     CRF=22 ;;
         esac
+      elif [[ ${1} == rmj ]]; then
+        RMCJNS=true
+        msg "Will remove created files when done."
       else
         ((JOINS++))
         JOINSF=$(printf "%04d" $JOINS)
@@ -593,6 +598,7 @@ case ${PROCES} in
               -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
               -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
             [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
+            CJOINF+=("join${JOINSF}.mkv")
             msg 'Finished lossless copy.'
           else
             if [ -s "${1}" ]; then
@@ -622,7 +628,15 @@ case ${PROCES} in
       -c:a aac ${YTASET} temp.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     mv temp.mp4 join.mp4
+
     msg 'Finished combining videos.'
+
+    if ${RMCJNS}; then
+      for JOINFL in "${CJOINF[@]}"; do
+        rm -v "${JOINFL}"
+      done
+      msg 'Finsihed removing join files that were created.'
+    fi
     ;;
 
   splitav)
