@@ -36,9 +36,11 @@ VCPROC has five sets of process: General, Utilities, Pre-Production, Production,
 
 ### General
 
-#### `all [process] [normal additional arguments]`
+#### `all [process] [dryrun] [normal additional arguments]`
 
 Execute `[process]` for each instance of `vcproc.cfg` (process=join|lossless|preview|vcap|youtube) or `[normal additional arguments]` (which would only be a file name when process=remux|set|trim) found in the current directory and all subdirectories.  If a `[process]` file (eg. `vcap.mp4` for `vcap`, `remux.ts` for `remux`, etc.) is found, that directory will be skipped on the assumption that the process has already been run.
+
+If `dryrun` is specified after `[process]` then `vcproc` will only print a list of the directories it will work on and then exit normally.
 
 ### Utilities
 
