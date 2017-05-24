@@ -146,13 +146,16 @@ This step is intended for upload to YouTube.  If your video was captured at a ve
 
 The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, `max70`, or `max80` to change the CRF value to 20, 17, 15, 13, 11, or 10, respectively.
 
-#### `join [max30|max40|max50|max60|max70] [video|vc] [video|vc] ...`
+#### `join [max30|max40|max50|max60|max70] [rmj] [video|vc] [video|vc] ...`
 
 This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by `set` to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in `set`.
 
 Video will be created sequentially -- `join0001.mkv`, `join0002.mkv`, etc.  You can process clips ahead of time using `lossless`, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
 
 The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, `max70`, or `max80` to change the CRF value to 20, 17, 15, 13, 11, or 10, respectively.
+
+The `rmj` option will remove join files that were created by the `join` process after the specified videos are successfully encoded into a single video.  Any pre-existing `join[nnnn].mkv` files are left alone.
+
 #### `lossless`
 
 This process creates a lossless video.  It's purpose is to create videos for the `join` process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply `set` these clips like you would any other video, then use filesystem links to refer back to them
