@@ -168,7 +168,9 @@ if [[ "|portable|youtube|" == *"|${1}|"* ]]; then
   fi
 fi
 
-case ${1} in
+PROCES="${1}"
+
+case ${PROCES} in
 
   remux)
 
@@ -746,9 +748,9 @@ case ${1} in
 
 esac
 
-if [[ "|portable|youtube|" == *"|${1}|"* ]]; then
+if [[ "|portable|youtube|" == *"|${PROCES}|"* ]]; then
   if [ ! -z ${USETMP+X} ]; then
-    msg "Moving ${OUTFIL} to ${1}.mp4"
+    msg "Moving ${OUTFIL} to ${PROCES}.mp4"
     mv "${OUTFIL}" ${1}.mp4
     msg 'Cleaning up...'
     rm "${WRKFIL}"
