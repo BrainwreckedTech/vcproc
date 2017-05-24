@@ -528,14 +528,16 @@ case ${PROCES} in
 
   youtube)
 
-    case "${2}" in
+    shift
+
+    case "${1}" in
       max30) CRF=20 ;; # Actual 28.1
       max40) CRF=17 ;; # Actual 39.0
       max50) CRF=15 ;; # Actual 47.9
       max60) CRF=13 ;; # Actual 58.1
       max70) CRF=11 ;; # Actual 70.3
       max80) CRF=10 ;; # Actual 77.5
-      max*)  echo "${2} is undefined." ; exit 1 ;;
+      max*)  echo "${1} is undefined." ; exit 1 ;;
       *)     CRF=22 ;;
     esac
 
@@ -543,7 +545,6 @@ case ${PROCES} in
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
-    msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${WRKFIL}."
     ;;
 
   portable)
