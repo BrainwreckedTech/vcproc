@@ -194,7 +194,7 @@ case ${PROCES} in
 
   trim)
 
-    [[ -z ${SLACKTIME+X} ]] && SLCKTM=3 || SLCKTM=${SLACTIME} # Number of extra seconds to keep when trimming
+    [[ -z ${SLACKTIME+X} ]] && SLCKTM=3 || SLCKTM=${SLACKTIME} # Number of extra seconds to keep when trimming
 
     shift
     ! [[ -s "${1}" ]] && echo "${1} does not exist." && exit 1
