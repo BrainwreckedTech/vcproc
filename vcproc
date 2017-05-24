@@ -266,7 +266,7 @@ case ${1} in
         TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
         msg "Trimming original video from ${TIPSEC}s for ${TRMDUR}s..."
-        ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t "${TRMDUR}" -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
+        ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TIPSEC}" -to "${TOPSEC}"-c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
 
         while true; do
           if [ -e ${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT} ]; then
@@ -404,7 +404,7 @@ case ${1} in
 
     if ! ask_copy_cfg 'ADPEAK'; then
       ${DLGBIN} --infobox "\n Determining peak audio level..." 5 38
-      ADPEAK="$(ffmpeg -ss ${VIP_TC} -i "${VDOFIL}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
+      ADPEAK="$(ffmpeg -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
       echo "ADPEAK=${ADPEAK}" >> ${TMPDIR}/${SCRPNM}.tmp
       ${DLGBIN} --msgbox "\n Peak audio level of -${ADPEAK}dB added to config." 7 51
     fi
@@ -455,7 +455,7 @@ case ${1} in
     P_FLTR=${T_FLTR/${OPHIGH}/${PVHIGH}}
 
     msg "Creating preview video of length $(sec2tc "${DURATN}")..."
-    ffmpeg ${FFOPTS} -ss "${VIP_TC}" -t "${DURATN}" -i "${VDOFIL}" -vf ${P_FLTR} -c:v libx264 -preset faster -crf 30 -af ${A_FLTR} -c:a libopus -b:a 48k preview.mkv
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${P_FLTR} -c:v libx264 -preset faster -crf 30 -af ${A_FLTR} -c:a libopus -b:a 48k preview.mkv
     msg 'Finished preview video.'
     ;;
 
@@ -518,7 +518,7 @@ case ${1} in
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
     msg "Creating ${VDOEXT^^} video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
-    ffmpeg ${FFOPTS} -ss "${TIPSEC}" -t $(bc <<< "${TRMDUR} - 0.217") -i "${VDOFIL}" -c:v copy \
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v copy \
       -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
     msg "Finished creating vcap.${VDOEXT}."
 
@@ -538,7 +538,7 @@ case ${1} in
     esac
 
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
-    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
+    ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
     msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${WRKFIL}."
@@ -547,7 +547,7 @@ case ${1} in
   portable)
 
     msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
-    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${WRKFIL}" \
+    ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
     msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${WRKFIL}."
@@ -557,7 +557,7 @@ case ${1} in
 
     [ ! -s lossless.mkv ] && mv lossless.mp4 lossless.mkv || rm lossless.mp4
 
-    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
       -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
     ;;
@@ -586,15 +586,15 @@ case ${1} in
           echo "Lossless copy of ${1} exists.  Skipping."
         else
           if [ "${1}" == "vc" ]; then
-            msg 'Creating lossless video clip...'
-            ffmpeg ${FFOPTS} -ss "${VIPSEC}" -t "${DURATN}" -i "${VDOFIL}" \
+            msg "Creating FLV1 lossless video clip for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
+            ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}"\
               -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
               -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
             [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
             msg 'Finished lossless copy.'
           else
             if [ -s "${1}" ]; then
-              msg "Creating lossless copy of ${1}..."
+              msg "Creating FLV1 lossless copy of ${1}..."
               ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
                 -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 join${JOINSF}.mkv
               [[ $? != 0 ]] && msg "Error creating copy of ${1}." && exit 1
@@ -655,7 +655,7 @@ case ${1} in
     AUDSET="-c:a flac -compression_level 12"
 
     msg "Creating home archive from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
-    ffmpeg ${FFOPTS} -ss "${VIPSEC}" -i "${VDOFIL}" -t "${DURATN}" -vf ${V_FLTR} ${VDOSET} -af ${A_FLTR} ${AUDSET} homearch.mkv
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${V_FLTR} ${VDOSET} -af ${A_FLTR} ${AUDSET} homearch.mkv
     msg "Finished home archive from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
     ;;
 
@@ -665,7 +665,7 @@ case ${1} in
 
     if [ -f ${SCRPNM}.cfg ]; then
       [[ $(bc <<< "${2} > 0") == 1 ]] && TMCODE=$(bc <<< "${VIPSEC%.*} + ${2}") || TMCODE=$(bc <<< "${VOPSEC%.*} + ${2}")
-      ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${VDOFIL}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
+      ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TMCODE}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
     else
       shopt -s nullglob
       for DRFILE in *.{3gp,asf,avi,divx,evo,f4v,flv,m2ts,mkv,mov,mp4,mpg,ogg,ps,qt,ts,webm,wmv}; do
@@ -676,7 +676,7 @@ case ${1} in
 	    DRFDUR=$(ffprobe -i "${DRFILE}" 2>&1 | grep Duration | cut -d: -f2- | cut -d, -f1 | sed 's/ //g')
 	    TMCODE=$(bc <<< "$(tc2sec "${DRFDUR}") + ${2}")
 	  fi
-          ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${DRFILE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
+          ffmpeg ${FFOPTS} -i "${DRFILE}" -ss "${TMCODE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
         fi
       done
     fi
