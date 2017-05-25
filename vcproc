@@ -594,7 +594,7 @@ case ${PROCES} in
           echo "Lossless copy of ${1} exists.  Skipping."
         else
           if [ "${1}" == "vc" ]; then
-            msg "Creating FLV1 lossless video clip for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
+            msg "Creating FFV1 lossless video clip for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
             ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}"\
               -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
               -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
@@ -603,7 +603,7 @@ case ${PROCES} in
             msg 'Finished lossless copy.'
           else
             if [ -s "${1}" ]; then
-              msg "Creating FLV1 lossless copy of ${1}..."
+              msg "Creating FFV1 lossless copy of ${1}..."
               ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
                 -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 join${JOINSF}.mkv
               [[ $? != 0 ]] && msg "Error creating copy of ${1}." && exit 1
