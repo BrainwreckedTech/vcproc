@@ -105,7 +105,7 @@ This is where you define your clips properties.  The steps are now taken care of
 > These values are auto-detected.  You can change these values if you want to convert your video to something different.
 
 > #####  CRPTOP, CRPLFT, CRPBTM, CRPRIT (Crop Top, Crop Left, Crop Bottom, Crop Right)
-> Sets the number of pixels to crop from the top, left, bottom, and right.  Setting all four to zero (the default) disables cropping.  Video will scaled expanded to OPWIDE x OPHIGH
+> Sets the number of pixels to crop from the top, left, bottom, and right.  Setting all four to zero (the default) disables cropping.  Video will scaled to OPWIDE x OPHIGH.
 
 > ##### VIP_TC, VOP_TC (Video In-Point Time Code, Video Out-Point Time Code)
 > Set the In- and Out-Points for the video you want to save.
@@ -114,7 +114,7 @@ This is where you define your clips properties.  The steps are now taken care of
 > Allows you to mute the first/last [x] seconds of audio.  Currently, MTLAST is non-functional.
 
 > ##### IPCRNG, OPCRNG (Input Color Range, Output Color Range)
-> There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Xbox 360 defaults to RGB (full), with the option to switch to YCbCr (mpeg).  PS3 always uses RGB (full) for games.  PS4 defaults to RGB Range: Limited with the option to change it to RGB Range: Full.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays
+> There are two standards for lumanince in video - pc/full/jpeg and tv/mpeg.  The pc/full/jpeg range is 0-255.  The tv/mpeg range is 16-235.  Optical media typically uses tv/mpeg.  Xbox 360 defaults to RGB (full), with the option to switch to YCbCr (mpeg).  PS3 always uses RGB (full) for games.  PS4 defaults to RGB Range: Limited with the option to change it to RGB Range: Full.  PC gaming, of course, uses pc/full/jpeg.  The tv/mpeg range will look slightly washed out on computer displays but fine on video displays.  The pc/full/jpeg range will crush shadows and lights on video displays but look fine on computer displays.
 
 > ##### PVWIDE, PVHIGH (Preview Width, Preview Height)
 > This allows you to set the dimensions for the optional PREVIEW step.
@@ -140,17 +140,17 @@ The default video container is `mp4` due to the intention of uploading to YouTub
 
 As video splicing without re-encoding requires starting on an I-Frame, your In-Point will not be strictly adhered to.  The default behavior starts the video with closest I-Frame *after* your In-Point (`ifa`).  You can choose to start the video with the closest I-Frame *before* the In-Point with the `ifb` argument.
 
-#### `youtube [max30|max40|max50|max60|max70]`
+#### `youtube [max30|max40|max50|max60|max70|max80]`
 
 This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, try `vcap` instead.  Processing can take a while, depending on the speed of your computer.
 
 The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, `max70`, or `max80` to change the CRF value to 20, 17, 15, 13, 11, or 10, respectively.
 
-#### `join [max30|max40|max50|max60|max70] [rmj] [video|vc] [video|vc] ...`
+#### `join [max30|max40|max50|max60|max70|max80] [rmj] [video|vc] [video|vc] ...`
 
 This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by `set` to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in `set`.
 
-Video will be created sequentially -- `join0001.mkv`, `join0002.mkv`, etc.  You can process clips ahead of time using `lossless`, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
+Videos will be created sequentially -- `join0001.mkv`, `join0002.mkv`, etc.  You can process clips ahead of time using `lossless`, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
 
 The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, `max70`, or `max80` to change the CRF value to 20, 17, 15, 13, 11, or 10, respectively.
 
@@ -158,7 +158,7 @@ The `rmj` option will remove join files that were created by the `join` process 
 
 #### `lossless`
 
-This process creates a lossless video.  It's purpose is to create videos for the `join` process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply `set` these clips like you would any other video, then use filesystem links to refer back to them
+This process creates a lossless video.  It's purpose is to create videos for the `join` process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply `set` these clips like you would any other video, then use filesystem links to refer back to them.
 
 ### Unsupported Processes
 
