@@ -200,20 +200,34 @@ case ${PROCES} in
     ! [[ -s "${1}" ]] && echo "${1} does not exist." && exit 1
     VDOFIL="${1}"
 
-    mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
     TCCNCL=false
     VIPSEC=()
     VOPSEC=()
+
+    if [ -s trim.cfg ]; then
+      ${DLGBIN} --yesno "\n Load $(wc -l < trim.cfg) trims from save file?" 7 37
+      if [ ${?} -eq 0 ]; then
+        while read -r TM_CDS; do
+          VIPSEC+=("$(tc2sec "${TM_CDS%-*}")")
+          VOPSEC+=("$(tc2sec "${TM_CDS#*-}")")
+        done < trim.cfg
+      fi
+    fi
+
+    TM_CDS=
+
+    mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
 
     while true; do
       HLPMSG="Video #$(( ${#VIPSEC[@]} + 1 ))\n\nYou can do multiple trims in one go.\n\nEnter time codes in HH:MM:SS.sss format.\n\nPress Cancel when you are finished."
       TIMCDS="$(${DLGBIN} --stdout --title 'In/Out Points' --form "${HLPMSG}" 15 45 0 " In Point:" 1 1 "${TM_CDS%-*}" 1 12 13 0 "Out Point:" 2 1 "${TM_CDS#*-}" 2 12 13 0)"
       if [ ${?} -eq 0 ]; then
-        TM_CDS=$(echo "${TIMCDS}" | tr '\n' '-' | sed 's/-$//g')
+        TCTRIM="${TIMCDS%-}"
+        TM_CDS="${TCTRIM//$'\n'/-}"
         if istc "${TM_CDS%-*}" && istc "${TM_CDS#*-}"; then
+          echo "${TM_CDS}" >> trim.cfg
           VIPSEC+=("$(tc2sec "${TM_CDS%-*}")")
           VOPSEC+=("$(tc2sec "${TM_CDS#*-}")")
-          TIMCDS=
           TM_CDS=
         else
           ${DLGBIN} --title 'OOPS!' --msgbox "${TIMCDS} are invalid time codes.  Try again." 0 0
@@ -227,7 +241,7 @@ case ${PROCES} in
 
     for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
 
-      msg "WORKING ON VIDEO $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}"
+      msg "WORKING ON VIDEO $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}, TRIM FROM ${VIPSEC[${LPCNTR}]} TO ${VOPSEC[${LPCNTR}]}"
 
       for VDOFIL in "$@"; do
 
@@ -268,7 +282,7 @@ case ${PROCES} in
         TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
         msg "Trimming original video from ${TIPSEC}s for ${TRMDUR}s..."
-        ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TIPSEC}" -to "${TOPSEC}"-c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
+        ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TOPSEC}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
 
         while true; do
           if [ -e ${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT} ]; then
