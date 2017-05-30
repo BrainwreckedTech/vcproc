@@ -147,7 +147,7 @@ for VCPCFG in "${CFGFLS[@]}"; do
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$(bc <<< "${VOPSEC} - ${VIPSEC}")
   [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ] && A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,$(bc <<< "${MTLEAD}+${VIPSEC}"))':volume=0"
 
-  OPSET1="-preset slower -refs 12"
+  OPSET1="-preset slower -refs 4"
   YTVSET="-bf 2 ${GOPLEN} -flags +cgop -movflags faststart"
   OPSET2="-pix_fmt yuv420p -profile:v high -level 4.2"
   YTASET="-strict 2 -b:a 384k -r:a 48000"
