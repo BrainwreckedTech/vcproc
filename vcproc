@@ -581,9 +581,10 @@ case ${PROCES} in
 
   join)
 
-    JOINS=0
-    RMCJNS=false
-    CJOINF=()
+    JJOINS=
+    JFILES=()
+    JVFLTR=()
+    JAFLTR=()
     shift
 
     while test $# -gt 0; do
@@ -596,35 +597,20 @@ case ${PROCES} in
           max70) CRF=11 ;; # Actual 70.3
           max80) CRF=10 ;; # Actual 77.5
           max*)  echo "${1} is undefined." ; exit 1 ;;
-          *)     CRF=22 ;;
         esac
-      elif [[ ${1} == rmj ]]; then
-        RMCJNS=true
-        msg "Will remove created files when done."
       else
-        ((JOINS++))
-        JOINSF=$(printf "%04d" $JOINS)
-        if [ -s join${JOINSF}.mkv ]; then
-          echo "Lossless copy of ${1} exists.  Skipping."
+        JJOINS+="[v${#JFILES[@]}][a${#JFILES[@]}]"
+        if [ "${1}" == "vc" ]; then
+          JVFLTR+=("trim=${VIPSEC}:${VOPSEC},${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
+          JAFLTR+=("atrim=${VIPSEC}:${VOPSEC},${A_FLTR},asetpts=PTS-STARTPTS[a${#JFILES[@]}];")
+          JFILES+=("-i ${VDOFIL}")
         else
-          if [ "${1}" == "vc" ]; then
-            msg "Creating FFV1 lossless video clip for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
-            ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}"\
-              -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
-              -af ${A_FLTR} -c:a flac -compression_level 12 join${JOINSF}.mkv
-            [[ $? != 0 ]] && msg 'Error creating lossless copy.' && exit 1
-            CJOINF+=("join${JOINSF}.mkv")
-            msg 'Finished lossless copy.'
+          if [ -s "${1}" ]; then
+            JVFLTR+=("${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
+            JAFLTR+=("asetpts=PTS-STARTPTS[a${#JFILES[@]}];")
+            JFILES+=("-i ${1}")
           else
-            if [ -s "${1}" ]; then
-              msg "Creating FFV1 lossless copy of ${1}..."
-              ffmpeg ${FFOPTS} -i "${CDBAIT}" -vf ${V_FLTR} \
-                -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 -c:a flac -compression_level 12 join${JOINSF}.mkv
-              [[ $? != 0 ]] && msg "Error creating copy of ${1}." && exit 1
-              msg "Created lossless copy of ${1}."
-            else
-              msg "File '${1}' does not exist or is 0 bytes." && exit 1
-            fi
+            msg "File '${1}' does not exist or is 0 bytes." && exit 1
           fi
         fi
       fi
@@ -633,25 +619,18 @@ case ${PROCES} in
 
     msg 'Combining videos...'
 
-    for ((JOINLP=1; JOINLP<=JOINS; JOINLP++)); do
-      JFILES+="-i join$(printf "%04d" ${JOINLP}).mkv "
-      FILTER+="[$((${JOINLP} - 1)):v:0] [$((${JOINLP} - 1 )):a:0] "
+    for ((JOINLP=0; JOINLP<${#JFILES[@]}; JOINLP++)); do
+      FILTER+="[${JOINLP}:v:0]${JVFLTR[${JOINLP}]} [${JOINLP}:a:0]${JAFLTR[${JOINLP}]} "
     done
 
-    ffmpeg ${FFOPTS} ${JFILES} -filter_complex "${FILTER} concat=n=${JOINS}:v=1:a=1 [v] [a]" \
+    ffmpeg ${FFOPTS} ${JFILES[@]} \
+      -filter_complex "${FILTER}${JJOINS}concat=n=${#JFILES[@]}:v=1:a=1 [v] [a]" \
       -map "[v]" -map "[a]" -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -c:a aac ${YTASET} temp.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     mv temp.mp4 join.mp4
 
     msg 'Finished combining videos.'
-
-    if ${RMCJNS}; then
-      for JOINFL in "${CJOINF[@]}"; do
-        rm -v "${JOINFL}"
-      done
-      msg 'Finsihed removing join files that were created.'
-    fi
     ;;
 
   splitav)
