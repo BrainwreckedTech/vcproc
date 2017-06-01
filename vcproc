@@ -37,6 +37,8 @@ CRPLFT=0
 CRPBTM=0
 CRPRIT=0
 
+CRF=22
+
 grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
 grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
 ON_WSL=true || ON_WSL=false
@@ -490,13 +492,10 @@ case ${PROCES} in
         mp4) shift ; VDOEXT=mp4 ;;
         ifb) shift ; VDOBGN="before" ;;
         ifa) shift ; VDOBGN="after" ;;
-        *)   echo "Uknown option ${OPTARG}" ; [[ ! -s vcap.mp4 ]] && rm vcap.mp4 ; exit 1 ;;
       esac
     done
 
     [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 vcap.${VDOEXT}
-
-    VIPSEC=$(tc2sec "${VIP_TC}")
 
     for IFDRTN in 5 20 35; do
       [[ $(bc <<< "${VIPSEC} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC} - ${IFDRTN}")
@@ -552,7 +551,6 @@ case ${PROCES} in
       max70) CRF=11 ;; # Actual 70.3
       max80) CRF=10 ;; # Actual 77.5
       max*)  echo "${1} is undefined." ; exit 1 ;;
-      *)     CRF=22 ;;
     esac
 
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
@@ -695,9 +693,6 @@ case ${PROCES} in
   all)
 
     shift
-    PROCES="${1}"
-
-    shift
     if [ "${1}" == "dryrun" ]; then
       DRYRUN=true
       shift
@@ -705,18 +700,26 @@ case ${PROCES} in
       DRYRUN=false
     fi
 
-    case "${PROCES}" in
-      join|lossless|portable|preview|vcap|youtube)
-        FDFILE="vcproc.cfg"
-        ;;
-      normalize|remux|set|splitav|trim)
-        FDFILE="${1}"
-        ;;
-      *)
-        echo "Can't run ${PROCES} on multiple directories"
-        exit 1
-        ;;
-    esac
+    PRCLST=(${1//+/ })
+    shift
+
+    TARGET=()
+    TRGSRT=()
+
+    for PROCES in "${PRCLST[@]}"; do
+      case "${PROCES}" in
+        join|lossless|portable|preview|vcap|youtube)
+          FDFILE="vcproc.cfg"
+          ;;
+        normalize|remux|set|splitav|trim)
+          FDFILE="${1}"
+          ;;
+        *)
+          echo "Can't run ${PROCES} on multiple directories"
+          exit 1
+          ;;
+      esac
+    done
 
     while read -r -d '' LOCATN; do
       LOCTRM="${LOCATN%/${FDFILE}}"
@@ -735,21 +738,26 @@ case ${PROCES} in
 
     if ${DRYRUN}; then
       IFS=$'\n'
-      msg 'DRYRUN: The following directories will be worked on:'
+      msg "DRYRUN: The following directories will be worked on:"
       echo "${TARGET[*]}"
       unset IFS
     else
       CURDIR="$(pwd)"
       for DRCTRY in "${TARGET[@]}"; do
-        cd "${DRCTRY}"
-        FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)"
-        if [ "${FDFILE}" == "" ]; then
-          echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
-          "${SCRPNM}" "${PROCES}" $@
-        else
-          echo "${DRCTRY}/${FDFILE} exists -- skipping."
-        fi
-        cd "${CURDIR}"
+        for PROCES in "${PRCLST[@]}"; do
+          cd "${DRCTRY}"
+          case ${PROCES} in
+            set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
+            *)   FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)" ;;
+          esac
+          if [ "${FDFILE}" == "" ]; then
+            echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
+            "${SCRPNM}" "${PROCES}" $@
+          else
+            echo "${DRCTRY}/${FDFILE} exists -- skipping."
+          fi
+          cd "${CURDIR}"
+        done
       done
     fi
     ;;
