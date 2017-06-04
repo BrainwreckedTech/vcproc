@@ -284,7 +284,7 @@ case ${PROCES} in
         TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
         msg "Trimming original video from ${TIPSEC}s for ${TRMDUR}s..."
-        ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TOPSEC}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
+        ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
 
         while true; do
           if [ -e ${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT} ]; then
