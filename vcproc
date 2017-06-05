@@ -69,7 +69,7 @@ function sec2tc() {
   ((HOUR=${WHLS}/3600))
   ((MINS=(${WHLS}%3600)/60))
   ((SECS=${WHLS}%60))
-  printf "%02d:%02d:%02d.%03d" ${HOUR} ${MINS} ${SECS} ${MILS}
+  printf "%02d:%02d:%02d.%03d" ${HOUR} ${MINS} ${SECS} ${MILS:0:3}
 }
 
 function istc() {
