@@ -15,36 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-MISSDP=false
-
-! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
-! command -v ffmpeg &> /dev/null && echo "Could not find ffmpeg" && MISSDP=true
-! command -v mediainfo &> /dev/null && echo "Could not find mediainfo" && MISSDP=true
-! command -v mpv &> /dev/null && echo "Could not find mpv" && MISSDP=true
-! command -v bc &> /dev/null && echo "Could not find bc" && MISSDP=true
-
-${MISSDP} && exit 1
-
 CLBOLD="$(tput bold)"
 CLNORM="$(tput sgr0)"
 FFOPTS="-y -v info -stats"
-FFOPTS="-y -v fatal -stats"
+FFOPTS="-y -v fatal -stats"  # For debugging, comment this to keep -v info
 SCRPNM="$(basename "${0}")"
 TMPDIR="/tmp/vcproc-${USER}"
-
 CRPTOP=0
 CRPLFT=0
 CRPBTM=0
 CRPRIT=0
-
+MISSDP=false
+MPVBIN=true
 CRF=22
-
-grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
-grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
-ON_WSL=true || ON_WSL=false
-
-[ -z ${DISPLAY+x} ] && DLGBIN=dialog || DLGBIN=Xdialog
-DLGBIN=dialog
 
 function pak {
   read -r -n1 -r -s -p 'Press any key to continue...'
@@ -87,6 +70,23 @@ function get_file_dialog() {
 function list_video_files {
   echo "$(find -maxdepth 1 -regextype posix-extended -regex '\.\/[[:print:]]+\.(3gp|3g2|asf|avi|divx|evo|f4v|flv|m2p|mkv|mka|mks|mcf|mp4|mov|mpeg|mpg|mxf|ogg|ps|ts|qt|rmvb|vob|webm|wma|wmv)' | sed 's:^\./::g')"
 }
+
+! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
+! command -v ffmpeg &> /dev/null && echo "Could not find ffmpeg" && MISSDP=true
+! command -v bc &> /dev/null && echo "Could not find bc" && MISSDP=true
+! command -v mediainfo &> /dev/null && echo "Could not find mediainfo" && MISSDP=true
+
+${MISSDP} && exit 1
+
+! command -v mpv &> /dev/null && \
+msg "Could not find mpv.  Play videos for `set` and `trim` manually." && MPVBIN=false
+
+grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
+grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
+ON_WSL=true || ON_WSL=false
+
+[ -z ${DISPLAY+x} ] && DLGBIN=dialog || DLGBIN=Xdialog
+DLGBIN=dialog
 
 mkdir -p "${TMPDIR}"
 
@@ -218,7 +218,7 @@ case ${PROCES} in
 
     TM_CDS=
 
-    mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
+    ${MPVBIN} && mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
 
     while true; do
       HLPMSG="Video #$(( ${#VIPSEC[@]} + 1 ))\n\nYou can do multiple trims in one go.\n\nEnter time codes in HH:MM:SS.sss format.\n\nPress Cancel when you are finished."
@@ -367,7 +367,7 @@ case ${PROCES} in
       TM_CDS="${VIP_TC}-${VOP_TC}"
     fi
 
-    mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
+    ${MPVBIN} && mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
 
     while true; do
       TM_CDS="$(${DLGBIN} --stdout --title 'In/Out Points' --form "${HLPMSG}" 12 36 0 " In Point:" 1 1 "${TM_CDS%-*}" 1 12 13 0 "Out Point:" 2 1 "${TM_CDS#*-}" 2 12 13 0 | tr '\n' '-' | sed 's/-$//g' )"
