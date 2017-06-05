@@ -760,6 +760,11 @@ case ${PROCES} in
     fi
     ;;
 
+  *)
+
+    msg "The '${PROCES}' process is unknown."
+    ;;
+
 esac
 
 if [[ "|portable|youtube|" == *"|${PROCES}|"* ]]; then
