@@ -239,15 +239,19 @@ case ${PROCES} in
       fi
     done
 
-    OFFSET=0
+    for VDOFIL in "$@"; do
 
-    for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
+      VDOEXT="${VDOFIL##*.}"
 
-      msg "WORKING ON VIDEO $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}, TRIM FROM ${VIPSEC[${LPCNTR}]} TO ${VOPSEC[${LPCNTR}]}"
+      STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
+      [ "${STRTTM}" == "" ] && STRTTM=0
+      msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
 
-      for VDOFIL in "$@"; do
+      for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
 
-        VDOEXT="${VDOFIL##*.}"
+        OFFSET=0
+
+        msg "WORKING ON ${VDOFIL^^} TRIM $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}, TRIM FROM $(sec2tc ${VIPSEC[${LPCNTR}]}) TO $(sec2tc ${VOPSEC[${LPCNTR}]})"
 
         for IFDRTN in 5 20 35; do
           [[ $(bc <<< "${VIPSEC[${LPCNTR}]} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC[${LPCNTR}]} - ${IFDRTN}")
@@ -255,35 +259,30 @@ case ${PROCES} in
           [[ $(bc <<< "${RISTOP} > ${VOPSEC[${LPCNTR}]}") == 1 ]] && RISTOP="${VOPSEC[${LPCNTR}]}"
           RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
-          msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
+          msg "Generating list of I-frames ±${IFDRTN}s from In-Point..."
           ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/original.ift
-          msg 'Generation completed.'
 
           [ -s ${TMPDIR}/original.ift ] && break
         done
 
-        STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
-        [ "${STRTTM}" == "" ] && STRTTM=0
-        msg "Stream time stamps start at ${STRTTM}s -- adjusting time stamps..."
+        msg "Adjusting time stamps for PTS start..."
 
         while read -r FRAME; do
           bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
         done < ${TMPDIR}/original.ift > ${TMPDIR}/original.ifl
         rm ${TMPDIR}/original.ift
-        msg 'I-frame list generation complete.'
 
-        msg "Calculating closest I-frame before in-point less ${SLCKTM} seconds..."
+        msg "Getting closest I-frame before in-point less ${SLCKTM} seconds..."
         cp ${TMPDIR}/original.ifl ${TMPDIR}/original.ifc
         bc <<< "${VIPSEC[${LPCNTR}]} - ${SLCKTM}" >> ${TMPDIR}/original.ifc
         sort -n ${TMPDIR}/original.ifc > ${TMPDIR}/original.ifs
         rm ${TMPDIR}/original.ifc
         TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC[${LPCNTR}]} - ${SLCKTM}")" ${TMPDIR}/original.ifs | head -1 | tr -d '\n')
-        msg "Closest I-frame before ${VIPSEC[${LPCNTR}]}s is ${TIPSEC}s"
         rm ${TMPDIR}/original.ifs
         TOPSEC=$(bc <<< "${VOPSEC[${LPCNTR}]} + ${SLCKTM}")
         TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
 
-        msg "Trimming original video from ${TIPSEC}s for ${TRMDUR}s..."
+        msg "Trimming ${VDOFIL} for duration of $(sec2tc ${TRMDUR}) ($(sec2tc ${TIPSEC})-$(sec2tc ${TOPSEC}))"
         ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
 
         while true; do
@@ -295,7 +294,6 @@ case ${PROCES} in
         done
 
         mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT}"
-        msg 'Cleaning up.'
         rm ${TMPDIR}/original.ifl
 
       done
