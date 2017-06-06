@@ -132,9 +132,6 @@ for VCPCFG in "${CFGFLS[@]}"; do
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
     GOPLEN="-g $(echo "( ${FRMRAT} + 1 ) / 2" | bc)"
-    if [ "${1}" == "dvd" ]; then
-     OPWIDE=720; OPHIGH=480;
-    fi
     if [ ${CRPTOP} == 0 -a ${CRPLFT} == 0 -a ${CRPBTM} == 0 -a ${CRPRIT} == 0 ]; then
       CRPFLT=
     else
