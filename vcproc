@@ -533,15 +533,16 @@ case ${PROCES} in
 
     shift
 
-    case "${1}" in
-      max30) CRF=20 ;; # Actual 28.1
-      max40) CRF=17 ;; # Actual 39.0
-      max50) CRF=15 ;; # Actual 47.9
-      max60) CRF=13 ;; # Actual 58.1
-      max70) CRF=11 ;; # Actual 70.3
-      max80) CRF=10 ;; # Actual 77.5
-      max*)  echo "${1} is undefined." ; exit 1 ;;
-    esac
+    for OPTARG in "${@}"; do
+      case "${OPTARG}" in
+        max30) CRF=20 ;; # Actual 28.1
+        max40) CRF=17 ;; # Actual 39.0
+        max50) CRF=15 ;; # Actual 47.9
+        max60) CRF=13 ;; # Actual 58.1
+        max70) CRF=11 ;; # Actual 70.3
+        max80) CRF=10 ;; # Actual 77.5
+      esac
+    done
 
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
