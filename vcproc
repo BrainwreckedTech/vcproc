@@ -15,6 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+MISSDP=false
+
+! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
+! command -v ffmpeg &> /dev/null && echo "Could not find ffmpeg" && MISSDP=true
+! command -v bc &> /dev/null && echo "Could not find bc" && MISSDP=true
+! command -v mediainfo &> /dev/null && echo "Could not find mediainfo" && MISSDP=true
+
+${MISSDP} && exit 1
+
 CLBOLD="$(tput bold)"
 CLNORM="$(tput sgr0)"
 FFOPTS="-y -v info -stats"
@@ -25,7 +34,6 @@ CRPTOP=0
 CRPLFT=0
 CRPBTM=0
 CRPRIT=0
-MISSDP=false
 MPVBIN=true
 CRF=22
 
@@ -70,13 +78,6 @@ function get_file_dialog() {
 function list_video_files {
   echo "$(find -maxdepth 1 -regextype posix-extended -regex '\.\/[[:print:]]+\.(3gp|3g2|asf|avi|divx|evo|f4v|flv|m2p|mkv|mka|mks|mcf|mp4|mov|mpeg|mpg|mxf|ogg|ps|ts|qt|rmvb|vob|webm|wma|wmv)' | sed 's:^\./::g')"
 }
-
-! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
-! command -v ffmpeg &> /dev/null && echo "Could not find ffmpeg" && MISSDP=true
-! command -v bc &> /dev/null && echo "Could not find bc" && MISSDP=true
-! command -v mediainfo &> /dev/null && echo "Could not find mediainfo" && MISSDP=true
-
-${MISSDP} && exit 1
 
 ! command -v mpv &> /dev/null && \
 msg "Could not find mpv.  Play videos for `set` and `trim` manually." && MPVBIN=false
