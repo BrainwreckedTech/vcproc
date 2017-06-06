@@ -497,31 +497,28 @@ case ${PROCES} in
       [[ $(bc <<< "${RISTOP} > ${VOPSEC}") == 1 ]] && RISTOP="${VOPSEC}"
       RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
-      msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
+      msg "Generating list of I-frames ±${IFDRTN}s from In-Point..."
       ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/vcap.ift
-      msg "I-frames found at $(cat ${TMPDIR}/vcap.ift | tr '\n' ' ')"
 
       [ -s ${TMPDIR}/vcap.ift ] && break
     done
 
     STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
     [ "${STRTTM}" == "" ] && STRTTM=0
-    msg "Stream time stamps start at ${STRTTM}s -- adjusting time stamps..."
+    msg "Adjusting time stamps for PTS start..."
 
     while read -r FRAME; do
       bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
     done < ${TMPDIR}/vcap.ift > ${TMPDIR}/vcap.ifl
     rm ${TMPDIR}/vcap.ift
-    msg 'I-frame list generation complete.'
 
-    msg "Calculating closest I-frame ${VDOBGN} in-point..."
+    msg "Getting closest I-frame ${VDOBGN} in-point..."
     cp ${TMPDIR}/vcap.ifl ${TMPDIR}/vcap.ifc
     echo "${VIPSEC}" >> ${TMPDIR}/vcap.ifc
     sort -n ${TMPDIR}/vcap.ifc > ${TMPDIR}/vcap.ifs
     rm ${TMPDIR}/vcap.ifc
     [[ ${VDOBGN} == "after" ]] && TIPSEC=$(grep -A 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | tail -1 | tr -d '\n')
     [[ ${VDOBGN} == "before" ]] && TIPSEC=$(grep -B 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | head -1 | tr -d '\n')
-    msg "Closest I-frame ${VDOBGN} ${VIPSEC}s is ${TIPSEC}s"
     rm ${TMPDIR}/vcap.ifs
     TOPSEC=${VOPSEC}
     TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
@@ -529,7 +526,6 @@ case ${PROCES} in
     msg "Creating ${VDOEXT^^} video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v copy \
       -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
-    msg "Finished creating vcap.${VDOEXT}."
 
     ;;
 
