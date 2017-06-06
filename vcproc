@@ -502,7 +502,7 @@ case ${PROCES} in
       RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
 
       msg "Generating list of I-frames from ${RISTRT}s to ${RISTOP}s (duration ${RIDRTN})..."
-      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "${RISTRT}%+${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/vcap.ift
+      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/vcap.ift
       msg "I-frames found at $(cat ${TMPDIR}/vcap.ift | tr '\n' ' ')"
 
       [ -s ${TMPDIR}/vcap.ift ] && break
