@@ -749,7 +749,7 @@ case ${PROCES} in
             *)   FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
           if [ "${FDFILE}" == "" ]; then
-            echo -e "\e[1;92m:: Working on ${DRCTRY}\e[0m"
+            echo -e "\e[1;92m:: Working on ${DRCTRY}/${PROCES}\e[0m"
             "${SCRPNM}" "${PROCES}" $@
           else
             echo "${DRCTRY}/${FDFILE} exists -- skipping."
