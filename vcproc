@@ -592,6 +592,8 @@ case ${PROCES} in
           max80) CRF=10 ;; # Actual 77.5
           max*)  echo "${1} is undefined." ; exit 1 ;;
         esac
+      elif [[ "|ifa|ifb|mkv|mp4|" == *"|${1}|"* ]]; then
+        msg "Ignoring '${1}' (vcap) argument."
       else
         JJOINS+="[v${#JFILES[@]}][a${#JFILES[@]}]"
         if [ "${1}" == "vc" ]; then
