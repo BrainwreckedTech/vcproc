@@ -317,8 +317,6 @@ case ${PROCES} in
       fi
     }
 
-    [[ -s ${SCRPNM}.cfg ]] && msg 'Existing ${SCRPNM}.cfg file found.'
-
     if [ -n "${2}" ] && [ -s "${2}" ]; then
       VDOFIL="${2}"
     elif [ -z ${VDOFIL+x} ]; then
