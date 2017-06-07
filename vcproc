@@ -82,43 +82,95 @@ function list_video_files {
   echo "$(find -maxdepth 1 -regextype posix-extended -regex '\.\/[[:print:]]+\.(3gp|3g2|asf|avi|divx|evo|f4v|flv|m2p|mkv|mka|mks|mcf|mp4|mov|mpeg|mpg|mxf|ogg|ps|ts|qt|rmvb|vob|webm|wma|wmv)' | sed 's:^\./::g')"
 }
 
-CFGFLS=()
-WALKED=
+function load_config {
 
-[ -s "${HOME}/.config/vcproc/${SCRPNM}.cfg" ] && CFGFLS+=("${HOME}/.config/vcproc/${SCRPNM}.cfg")
-while true; do
-  [ "${WALKED}" == "${PWD}" ] && break
-  TOWALK="${PWD#${WALKED}/}"
-  WALKIN="${WALKED}/${TOWALK%%/*}"
-  [ -s "${WALKIN}/${SCRPNM}.cfg" ] && CFGFLS+=("${WALKIN}/${SCRPNM}.cfg")
-  WALKED="${WALKIN}"
-done
+  CFGFLS=()
+  WALKED=
 
-for VCPCFG in "${CFGFLS[@]}"; do
-  tr '\r' '\n' < "${VCPCFG}" > ${TMPDIR}/${SCRPNM}.unix
-  sed -i '/^$/d' ${TMPDIR}/${SCRPNM}.unix
-  touch -d "$(date -R -r "${VCPCFG}")" "${TMPDIR}/${SCRPNM}.unix"
-  mv ${TMPDIR}/${SCRPNM}.unix "${VCPCFG}"
+  [ -s "${HOME}/.config/vcproc/${SCRPNM}.cfg" ] && CFGFLS+=("${HOME}/.config/vcproc/${SCRPNM}.cfg")
 
-  while IFS='= ' read -r lhs rhs; do
-    if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
-      rhs="${rhs%%\#*}"             # Del in line right comments
-      rhs="${rhs%"${rhs##*[^ ]}"}"  # Del trailing spaces
-      rhs="${rhs%\"*}"              # Del opening string quotes
-      rhs="${rhs#\"*}"              # Del closing string quotes
-      declare $lhs="$rhs"
-    fi
-  done < "${VCPCFG}"
+  while true; do
+    [ "${WALKED}" == "${PWD}" ] && break
+    TOWALK="${PWD#${WALKED}/}"
+    WALKIN="${WALKED}/${TOWALK%%/*}"
+    [ -s "${WALKIN}/${SCRPNM}.cfg" ] && CFGFLS+=("${WALKIN}/${SCRPNM}.cfg")
+    WALKED="${WALKIN}"
+  done
 
-  if [ ! -z ${VIP_TC+X} ]; then
-    istc "${VIP_TC}" || { echo "Invalid Video In Point Time Code. Must be HH:MM:SS.NNN"; exit 1; }
-    VIPSEC="$(tc2sec "${VIP_TC}")"
+  for VCPCFG in "${CFGFLS[@]}"; do
+
+    tr '\r' '\n' < "${VCPCFG}" > ${TMPDIR}/${SCRPNM}.unix
+    sed -i '/^$/d' ${TMPDIR}/${SCRPNM}.unix
+    touch -d "$(date -R -r "${VCPCFG}")" "${TMPDIR}/${SCRPNM}.unix"
+    mv ${TMPDIR}/${SCRPNM}.unix "${VCPCFG}"
+
+    while IFS='= ' read -r lhs rhs; do
+      if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
+        rhs="${rhs%%\#*}"             # Del in line right comments
+        rhs="${rhs%"${rhs##*[^ ]}"}"  # Del trailing spaces
+        rhs="${rhs%\"*}"              # Del opening string quotes
+        rhs="${rhs#\"*}"              # Del closing string quotes
+        SETSTR+="$lhs='$rhs';"
+      fi
+    done < "${VCPCFG}"
+  done
+
+  echo "${SETSTR}"
+}
+
+function check_config {
+
+  ALLSET=true
+
+  if [ ! -s "${SCRPNM}.cfg" ]; then
+    msg "File ${SCRPNM}.cfg not found." && ALLSET=false
+  else
+    [ -z ${VDOFIL+X} ] && msg 'ERROR: VDOFIL is not set' && ALLSET=false
+    [ -z ${VIP_TC+X} ] && msg 'ERROR: VIP_TC is not set' && ALLSET=false
+    [ -z ${VOP_TC+X} ] && msg 'ERROR: VOP_TC is not set' && ALLSET=flase
+    [ -z ${OPWIDE+X} ] && msg 'ERROR: OPWIDE is not set' && ALLSET=flase
+    [ -z ${OPHIGH+X} ] && msg 'ERROR: OPHIGH is not set' && ALLSET=flase
+    [ -z ${IPCRNG+X} ] && msg 'ERROR: IPCRNG is not set' && ALLSET=flase
+    [ -z ${OPCRNG+X} ] && msg 'ERROR: OPCRNG is not set' && ALLSET=flase
+    [ -z ${FRMRAT+X} ] && msg 'ERROR: FRMRAT is not set' && ALLSET=flase
+    [ -z ${VDODAR+X} ] && msg 'ERROR: VDODAR is not set' && ALLSET=flase
   fi
 
-  if [ ! -z ${VOP_TC+X} ]; then
-    istc "${VOP_TC}" || { echo "Invalid Video Out Point Time Code. Must be HH:MM:SS.NNN"; exit 1; }
-    VOPSEC="$(tc2sec "${VOP_TC}")"
+  if ${ALLSET}; then
+    CFPASS=true
+    [ ! -s "${VDOFIL}" ] && msg "ERROR: VDOFIL ${VDOFIL} not found." && CFPASS=false
+    [ "${OPWIDE}" -ne "${OPWIDE}" ] && msg 'ERROR: OPWIDE is not an integer' && CFPASS=false
+    [ "${OPHIGH}" -ne "${OPHIGH}" ] && msg 'ERROR: OPHIGH is not an integer' && CFPASS=false
+    istc "${VIP_TC}" || { msg "ERROR: VIP_TC is not a time code."; CFPASS=false; }
+    istc "${VOP_TC}" || { msg "ERROR: VOP_TC is not a time code."; CFPASS=false; }
+  else
+    CFPASS=false
   fi
+
+  if ${CFPASS}; then
+    [ $((${OPWIDE} % 8)) -ne 0 -o $((${OPHIGH} % 8)) -ne 0 ] && \
+      msg "WARNING: ${OPWIDE}x${OPHIGH} is not standard (dimensions not divisible by 8)."
+    [ "${OPWIDE}x${OPHIGH}" == "854x480" ] &&
+      msg "WARNING: 854x480 is a defacto standard."
+  fi
+
+  return $(( ${CFPASS} ))
+
+}
+
+function nnd_compat_check {
+
+  if [ $(bc <<< "scale=3;${OPWIDE}/${OPHIGH}") != $(bc <<< "scale=3;${VDODAR}") ]; then
+    OPWIDE=$(( ( ${OPHIGH} * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
+  fi
+
+  echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
+}
+
+function process_config {
+
+  VIPSEC="$(tc2sec "${VIP_TC}")"
+  VOPSEC="$(tc2sec "${VOP_TC}")"
 
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
@@ -142,20 +194,26 @@ for VCPCFG in "${CFGFLS[@]}"; do
   YTVSET="-bf 2 ${GOPLEN} -flags +cgop -movflags faststart"
   OPSET2="-pix_fmt yuv420p -profile:v high -level 4.2"
   YTASET="-strict 2 -b:a 384k -r:a 48000"
-done
 
-if [[ "|portable|youtube|" == *"|${1}|"* ]]; then
-  touch ${1}.mp4
+}
+
+function enable_usetmp {
+
+  touch ${PROCES}.mp4
+
   if [ -z ${USETMP+X} ]; then
     WRKFIL="${VDOFIL}"
-    OUTFIL="${1}.mp4"
+    OUTFIL="${PROCES}.mp4"
   else
     WRKFIL="${TMPDIR}/${VDOFIL}"
-    OUTFIL="${TMPDIR}/${1}.mp4"
+    OUTFIL="${TMPDIR}/${PROCES}.mp4"
     msg "Copying ${VDOFIL} to ${WRKFIL}..."
     cp "${VDOFIL}" "${WRKFIL}"
   fi
-fi
+
+  echo "WRKFIL='${WRKFIL}';OUTFIL='${OUTFIL}'"
+
+}
 
 ! command -v mpv &> /dev/null && \
 msg "Could not find mpv.  Play videos for `set` and `trim` manually." && MPVBIN=false
@@ -306,7 +364,9 @@ case ${PROCES} in
 
   set)
 
-    function ask_copy_cfg() {
+   eval "$(load_config)"
+
+   function ask_copy_cfg() {
 
       SETING="$(grep -q "${1}=" ${SCRPNM}.cfg 2> /dev/null)"
       [[ "${SETING}" == "" ]] && return 1
@@ -459,6 +519,10 @@ case ${PROCES} in
 
   preview)
 
+    eval "$(load_config)"
+    check_config
+    process_config
+
     [ ! -s preview.mkv ] && mv preview.mp4 preview.mkv || rm preview.mp4
 
     case ${2} in
@@ -476,7 +540,9 @@ case ${PROCES} in
 
   vcap)
 
-    [[ ! -s ${SCRPNM}.cfg ]] && msg "File ${SCRPNM}.cfg not found.  Run '${SCRPNM} set' first." && exit 1
+    eval "$(load_config)"
+    check_config
+    process_config
 
     shift
 
@@ -534,6 +600,12 @@ case ${PROCES} in
 
   youtube)
 
+    eval "$(load_config)"
+    check_config
+    eval "$(nnd_compat_check)"
+    process_config
+    eval "$(enable_usetmp)"
+
     shift
 
     for OPTARG in "${@}"; do
@@ -555,6 +627,11 @@ case ${PROCES} in
 
   portable)
 
+    eval "$(load_config)"
+    check_config
+    process_config
+    eval "$(enable_usetmp)"
+
     msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
@@ -564,6 +641,10 @@ case ${PROCES} in
 
   lossless)
 
+    eval "$(load_config)"
+    check_config
+    process_config
+
     [ ! -s lossless.mkv ] && mv lossless.mp4 lossless.mkv || rm lossless.mp4
 
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
@@ -572,6 +653,11 @@ case ${PROCES} in
     ;;
 
   join)
+
+    eval "$(load_config)"
+    check_config
+    eval "$(nnd_compat_check)"
+    process_config
 
     JJOINS=
     JFILES=()
@@ -655,6 +741,10 @@ case ${PROCES} in
 
   homearch)
 
+    eval "$(load_config)"
+    check_config
+    process_config
+
     VDOSET="-c:v libx264 -preset slower -crf 5 -qmin 0 -qmax 10 -refs 12 -bf 16 -profile:v high -level 4.2"
     AUDSET="-c:a flac -compression_level 12"
 
@@ -668,6 +758,9 @@ case ${PROCES} in
     [[ ! "${2}" =~ ^[+-]?[0-9]+([.][0-9]+)?$ ]] && echo "'${2}' is not a number.  ${0} thumb [number]" && exit
 
     if [ -f ${SCRPNM}.cfg ]; then
+      load_config
+      check_config
+      process_config
       [[ $(bc <<< "${2} > 0") == 1 ]] && TMCODE=$(bc <<< "${VIPSEC%.*} + ${2}") || TMCODE=$(bc <<< "${VOPSEC%.*} + ${2}")
       ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TMCODE}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
     else
