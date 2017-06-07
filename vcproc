@@ -159,12 +159,10 @@ function check_config {
 }
 
 function nnd_compat_check {
-
   if [ $(bc <<< "scale=3;${OPWIDE}/${OPHIGH}") != $(bc <<< "scale=3;${VDODAR}") ]; then
     OPWIDE=$(( ( ${OPHIGH} * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
+    echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
   fi
-
-  echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
 }
 
 function process_config {
