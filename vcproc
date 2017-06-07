@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+ET_BGN=$(cut -d\  -f1 < /proc/uptime)
+
 MISSDP=false
 
 ! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
@@ -26,6 +28,7 @@ ${MISSDP} && exit 1
 
 CLBOLD="$(tput bold)"
 CLNORM="$(tput sgr0)"
+CLBGRN="$(echo -e "\e[1;92m")"
 FFOPTS="-y -v info -stats"
 FFOPTS="-y -v fatal -stats"  # For debugging, comment this to keep -v info
 SCRPNM="$(basename "${0}")"
@@ -41,12 +44,12 @@ function pak {
   read -r -n1 -r -s -p 'Press any key to continue...'
 }
 
-function putib {
-  printf "[%011.2f]" "$(cut -d\  -f1 < /proc/uptime)"
+function elapsed_time {
+  sec2tc $(awk "BEGIN {b=${ET_BGN};n=$(cut -d\  -f1 < /proc/uptime);print n-b }")
 }
 
 function msg() {
-  echo "${CLBOLD}$(putib) ${1}${CLNORM}"
+  echo "${CLBOLD}${2}[$(elapsed_time)] ${1}${CLNORM}"
 }
 
 function tc2sec() {
@@ -699,8 +702,8 @@ case ${PROCES} in
     TARGET=()
     TRGSRT=()
 
-    for PROCES in "${PRCLST[@]}"; do
-      case "${PROCES}" in
+    for ALLPRC in "${PRCLST[@]}"; do
+      case "${ALLPRC}" in
         join|lossless|portable|preview|vcap|youtube)
           FDFILE="vcproc.cfg"
           ;;
@@ -708,7 +711,7 @@ case ${PROCES} in
           FDFILE="${1}"
           ;;
         *)
-          echo "Can't run ${PROCES} on multiple directories"
+          echo "Can't run ${ALLPRC} on multiple directories"
           exit 1
           ;;
       esac
@@ -737,15 +740,15 @@ case ${PROCES} in
     else
       CURDIR="$(pwd)"
       for DRCTRY in "${TARGET[@]}"; do
-        for PROCES in "${PRCLST[@]}"; do
+        for ALLPRC in "${PRCLST[@]}"; do
           cd "${DRCTRY}"
-          case ${PROCES} in
+          case ${ALLPRC} in
             set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
             *)   FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
           if [ "${FDFILE}" == "" ]; then
-            echo -e "\e[1;92m:: Working on ${DRCTRY}/${PROCES}\e[0m"
-            "${SCRPNM}" "${PROCES}" $@
+            msg ":: Working on ${DRCTRY}/${ALLPRC}" "${CLBGRN}"
+            "${SCRPNM}" "${ALLPRC}" $@
           else
             echo "${DRCTRY}/${FDFILE} exists -- skipping."
           fi
@@ -770,3 +773,5 @@ if [[ "|portable|youtube|" == *"|${PROCES}|"* ]]; then
     rm "${WRKFIL}"
   fi
 fi
+
+msg "${PROCES} finished successfully." "$( [ $ {PROCES}== all ] && echo "${CLBGRN}" )"
