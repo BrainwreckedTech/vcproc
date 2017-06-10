@@ -21,7 +21,7 @@ MISSDP=false
 
 ! command -v dialog &> /dev/null && echo "Could not find dialog" && MISSDP=true
 ! command -v ffmpeg &> /dev/null && echo "Could not find ffmpeg" && MISSDP=true
-! command -v bc &> /dev/null && echo "Could not find bc" && MISSDP=true
+! command -v awk &> /dev/null && echo "Could not find awk" && MISSDP=true
 ! command -v mediainfo &> /dev/null && echo "Could not find mediainfo" && MISSDP=true
 
 ${MISSDP} && exit 1
@@ -45,7 +45,7 @@ function pak {
 }
 
 function elapsed_time {
-  sec2tc $(awk "BEGIN {b=${ET_BGN};n=$(cut -d\  -f1 < /proc/uptime);print n-b }")
+  sec2tc $( awk "BEGIN { print $(cut -d\  -f1 < /proc/uptime) - ${ET_BGN} }" )
 }
 
 function msg() {
@@ -159,7 +159,9 @@ function check_config {
 }
 
 function nnd_compat_check {
-  if [ $(bc <<< "scale=3;${OPWIDE}/${OPHIGH}") != $(bc <<< "scale=3;${VDODAR}") ]; then
+  SARDEC=$( awk "BEGIN { print int( ${OPWIDE} / ${OPHIGH} * 1000 + 0.5 ) / 1000 }" )
+  DARDEC=$( awk "BEGIN { print int( ${VDODAR} * 1000 + 0.5 ) / 1000 }" )
+  if [  ${PARDEC} != ${SARDEC} ]; then
     OPWIDE=$(( ( ${OPHIGH} * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
     echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
   fi
@@ -172,7 +174,7 @@ function process_config {
 
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
-    GOPLEN="-g $(echo "( ${FRMRAT} + 1 ) / 2" | bc)"
+    GOPLEN="-g $( awk "BEGIN { print int( ( ${FRMRAT} + 1 ) / 2 ) }" )"
     if [ ${CRPTOP} == 0 -a ${CRPLFT} == 0 -a ${CRPBTM} == 0 -a ${CRPRIT} == 0 ]; then
       CRPFLT=
     else
@@ -185,8 +187,8 @@ function process_config {
     V_FLTR="${CRPFLT}scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
   fi
 
-  [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$(bc <<< "${VOPSEC} - ${VIPSEC}")
-  [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ] && A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,$(bc <<< "${MTLEAD}+${VIPSEC}"))':volume=0"
+  [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$( awk "BEGIN { print ${VOPSEC} - ${VIPSEC} }" )
+  [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ] && A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,$( awk "BEGIN { print ${MTLEAD} + ${VIPSEC} }" ))':volume=0"
 
   OPSET1="-preset slower -refs 4"
   YTVSET="-bf 2 ${GOPLEN} -flags +cgop -movflags faststart"
@@ -227,35 +229,32 @@ function get_closest_iframe {
   SLCKTM="${5}"
 
   for IFDRTN in 5 20 35; do
-    [[ $(bc <<< "${IPOINT} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${IPOINT} - ${IFDRTN}")
-    RISTOP="$(bc <<< "${IPOINT} + ${IFDRTN}")"
-    [[ $(bc <<< "${RISTOP} > ${OPOINT}") == 1 ]] && RISTOP="${OPOINT}"
-    RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
+    [[ $( awk "BEGIN { print (${IPOINT} < ${IFDRTN}) }" ) == 1 ]] && RISTRT=0 || RISTRT="$( awk "BEGIN { print ${IPOINT} - ${IFDRTN} }" )"
+    RISTOP="$( awk "BEGIN { print ${IPOINT} + ${IFDRTN} }" )"
+    [[ $( awk "BEGIN { print (${RISTOP} > ${OPOINT}) }" ) == 1 ]] && RISTOP="${OPOINT}"
+    RIDRTN="$( awk "BEGIN { print ${RISTOP} - ${RISTRT} }" )"
 
-    #msg "Generating list of I-frames ±${IFDRTN}s from In-Point..."
     ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${OVFILE}" | grep I | cut -d, -f2 > ${TMPDIR}/iframes.times
 
     [ -s "${TMPDIR}/iframes.times" ] && break
   done
 
-  #msg "Adjusting time stamps for PTS start..."
-
   while read -r FRAME; do
-    bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
+    awk "BEGIN { print ${FRAME} - ${STRTTM} }" | xargs printf '%01.3f\n'
   done < ${TMPDIR}/iframes.times > ${TMPDIR}/iframes.list
   rm ${TMPDIR}/iframes.times
 
   #msg "Getting closest I-frame ${VDOBGN} in-point..."
   cp ${TMPDIR}/iframes.list ${TMPDIR}/iframes.copy
-  bc <<< "${IPOINT} - ${SLCKTM}" >> ${TMPDIR}/iframes.copy
+  awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" >> ${TMPDIR}/iframes.copy
   sort -n ${TMPDIR}/iframes.copy > ${TMPDIR}/iframes.sort
   rm ${TMPDIR}/iframes.copy
-  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 "$(bc <<< "${IPOINT} - ${SLCKTM}")" ${TMPDIR}/iframes.sort | tail -1 | tr -d '\n')
-  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 "$(bc <<< "${IPOINT} - ${SLCKTM}")" ${TMPDIR}/iframes.sort | head -1 | tr -d '\n')
+  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | tail -1 | tr -d '\n')
+  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | head -1 | tr -d '\n')
   rm ${TMPDIR}/iframes.sort
 
-  TOPSEC=$(bc <<< "${OPOINT} + ${SLCKTM}")
-  TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
+  TOPSEC=$( awk "BEGIN { print ${OPOINT} + ${SLCKTM} }" )
+  TRMDUR=$( awk "BEGIN { print ${TOPSEC} - ${TIPSEC} }" )
 
   echo "TIPSEC='${TIPSEC}';TOPSEC='${TOPSEC}';TRMDUR='${TRMDUR}';"
 }
@@ -752,17 +751,17 @@ case ${PROCES} in
       load_config
       check_config
       process_config
-      [[ $(bc <<< "${2} > 0") == 1 ]] && TMCODE=$(bc <<< "${VIPSEC%.*} + ${2}") || TMCODE=$(bc <<< "${VOPSEC%.*} + ${2}")
+      [[ $( awk "BEGIN { print (${2} > 0) }" ) == 1 ]] && TMCODE=$( awk "BEGIN { print ${VIPSEC%.*} + ${2} }" ) || TMCODE=$( awk "BEGIN { print ${VOPSEC%.*} + ${2} }" )
       ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TMCODE}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
     else
       shopt -s nullglob
       for DRFILE in *.{3gp,asf,avi,divx,evo,f4v,flv,m2ts,mkv,mov,mp4,mpg,ogg,ps,qt,ts,webm,wmv}; do
         if [ -f "${DRFILE}" ]; then
-          if [[ $(bc <<< "${2} > 0") == 1 ]]; then
+          if [[ $( awk "BEGIN { print (${2} > 0) }" ) == 1 ]]; then
 	    TMCODE="${2}"
 	  else
 	    DRFDUR=$(ffprobe -i "${DRFILE}" 2>&1 | grep Duration | cut -d: -f2- | cut -d, -f1 | sed 's/ //g')
-	    TMCODE=$(bc <<< "$(tc2sec "${DRFDUR}") + ${2}")
+	    TMCODE=$( awk "BEGIN { print $(tc2sec "${DRFDUR}") + ${2} }" )
 	  fi
           ffmpeg ${FFOPTS} -i "${DRFILE}" -ss "${TMCODE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
         fi
