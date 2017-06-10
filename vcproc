@@ -213,6 +213,53 @@ function enable_usetmp {
 
 }
 
+function get_pts_start {
+  STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${1}" | grep program | cut -d, -f3 | tr -d '\n')
+  [ "${STRTTM}" == "" ] && STRTTM=0
+  echo ${STRTTM}
+}
+
+function get_closest_iframe {
+  OVFILE="${1}"
+  IPOINT="${2}"
+  OPOINT="${3}"
+  IDRCTN="${4}"
+  SLCKTM="${5}"
+
+  for IFDRTN in 5 20 35; do
+    [[ $(bc <<< "${IPOINT} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${IPOINT} - ${IFDRTN}")
+    RISTOP="$(bc <<< "${IPOINT} + ${IFDRTN}")"
+    [[ $(bc <<< "${RISTOP} > ${OPOINT}") == 1 ]] && RISTOP="${OPOINT}"
+    RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
+
+    #msg "Generating list of I-frames ±${IFDRTN}s from In-Point..."
+    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${OVFILE}" | grep I | cut -d, -f2 > ${TMPDIR}/iframes.times
+
+    [ -s "${TMPDIR}/iframes.times" ] && break
+  done
+
+  #msg "Adjusting time stamps for PTS start..."
+
+  while read -r FRAME; do
+    bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
+  done < ${TMPDIR}/iframes.times > ${TMPDIR}/iframes.list
+  rm ${TMPDIR}/iframes.times
+
+  #msg "Getting closest I-frame ${VDOBGN} in-point..."
+  cp ${TMPDIR}/iframes.list ${TMPDIR}/iframes.copy
+  bc <<< "${IPOINT} - ${SLCKTM}" >> ${TMPDIR}/iframes.copy
+  sort -n ${TMPDIR}/iframes.copy > ${TMPDIR}/iframes.sort
+  rm ${TMPDIR}/iframes.copy
+  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 "$(bc <<< "${IPOINT} - ${SLCKTM}")" ${TMPDIR}/iframes.sort | tail -1 | tr -d '\n')
+  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 "$(bc <<< "${IPOINT} - ${SLCKTM}")" ${TMPDIR}/iframes.sort | head -1 | tr -d '\n')
+  rm ${TMPDIR}/iframes.sort
+
+  TOPSEC=$(bc <<< "${OPOINT} + ${SLCKTM}")
+  TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
+
+  echo "TIPSEC='${TIPSEC}';TOPSEC='${TOPSEC}';TRMDUR='${TRMDUR}';"
+}
+
 ! command -v mpv &> /dev/null && \
 msg "Could not find mpv.  Play videos for `set` and `trim` manually." && MPVBIN=false
 
@@ -253,7 +300,7 @@ case ${PROCES} in
 
   trim)
 
-    [[ -z ${SLACKTIME+X} ]] && SLCKTM=3 || SLCKTM=${SLACKTIME} # Number of extra seconds to keep when trimming
+    [[ -z ${SLACKTIME+X} ]] && SLACKR=3 || SLACKR=${SLACKTIME} # Number of extra seconds to keep when trimming
 
     shift
     ! [[ -s "${1}" ]] && echo "${1} does not exist." && exit 1
@@ -300,8 +347,7 @@ case ${PROCES} in
 
       VDOEXT="${VDOFIL##*.}"
 
-      STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
-      [ "${STRTTM}" == "" ] && STRTTM=0
+      STRTTM=$(get_pts_start "${VDOFIL}")
       msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
 
       for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
@@ -310,34 +356,8 @@ case ${PROCES} in
 
         msg "WORKING ON ${VDOFIL^^} TRIM $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}, TRIM FROM $(sec2tc ${VIPSEC[${LPCNTR}]}) TO $(sec2tc ${VOPSEC[${LPCNTR}]})"
 
-        for IFDRTN in 5 20 35; do
-          [[ $(bc <<< "${VIPSEC[${LPCNTR}]} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC[${LPCNTR}]} - ${IFDRTN}")
-          RISTOP="$(bc <<< "${VIPSEC[${LPCNTR}]} + ${IFDRTN}")"
-          [[ $(bc <<< "${RISTOP} > ${VOPSEC[${LPCNTR}]}") == 1 ]] && RISTOP="${VOPSEC[${LPCNTR}]}"
-          RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
-
-          msg "Generating list of I-frames ±${IFDRTN}s from In-Point..."
-          ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/original.ift
-
-          [ -s ${TMPDIR}/original.ift ] && break
-        done
-
-        msg "Adjusting time stamps for PTS start..."
-
-        while read -r FRAME; do
-          bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
-        done < ${TMPDIR}/original.ift > ${TMPDIR}/original.ifl
-        rm ${TMPDIR}/original.ift
-
-        msg "Getting closest I-frame before in-point less ${SLCKTM} seconds..."
-        cp ${TMPDIR}/original.ifl ${TMPDIR}/original.ifc
-        bc <<< "${VIPSEC[${LPCNTR}]} - ${SLCKTM}" >> ${TMPDIR}/original.ifc
-        sort -n ${TMPDIR}/original.ifc > ${TMPDIR}/original.ifs
-        rm ${TMPDIR}/original.ifc
-        TIPSEC=$(grep -B 1 "$(bc <<< "${VIPSEC[${LPCNTR}]} - ${SLCKTM}")" ${TMPDIR}/original.ifs | head -1 | tr -d '\n')
-        rm ${TMPDIR}/original.ifs
-        TOPSEC=$(bc <<< "${VOPSEC[${LPCNTR}]} + ${SLCKTM}")
-        TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
+        msg "Finding closest iframe before In-Point..."
+        eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC[${LPCNTR}]} ${VOPSEC[${LPCNTR}]} before ${SLACKR})"
 
         msg "Trimming ${VDOFIL} for duration of $(sec2tc ${TRMDUR}) ($(sec2tc ${TIPSEC})-$(sec2tc ${TOPSEC}))"
         ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
@@ -351,7 +371,6 @@ case ${PROCES} in
         done
 
         mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT}"
-        rm ${TMPDIR}/original.ifl
 
       done
     done
@@ -483,6 +502,7 @@ case ${PROCES} in
     fi
 
     sort -u ${TMPDIR}/${SCRPNM}.tmp > ./${SCRPNM}.cfg; rm ${TMPDIR}/${SCRPNM}.tmp
+
     ;;
 
   normalize)
@@ -556,37 +576,11 @@ case ${PROCES} in
 
     [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 vcap.${VDOEXT}
 
-    for IFDRTN in 5 20 35; do
-      [[ $(bc <<< "${VIPSEC} < ${IFDRTN}") == 1 ]] && RISTRT=0 || RISTRT=$(bc <<< "${VIPSEC} - ${IFDRTN}")
-      RISTOP="$(bc <<< "${VIPSEC} + ${IFDRTN}")"
-      [[ $(bc <<< "${RISTOP} > ${VOPSEC}") == 1 ]] && RISTOP="${VOPSEC}"
-      RIDRTN="$(bc <<< "${RISTOP} - ${RISTRT}")"
+    STRTTM=$(get_pts_start "${VDOFIL}")
+    msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
 
-      msg "Generating list of I-frames ±${IFDRTN}s from In-Point..."
-      ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${VDOFIL}" | grep I | cut -d, -f2 > ${TMPDIR}/vcap.ift
-
-      [ -s ${TMPDIR}/vcap.ift ] && break
-    done
-
-    STRTTM=$(ffprobe -v fatal -select_streams v -show_streams -show_entries stream=start_time -of csv "${VDOFIL}" | grep program | cut -d, -f3 | tr -d '\n')
-    [ "${STRTTM}" == "" ] && STRTTM=0
-    msg "Adjusting time stamps for PTS start..."
-
-    while read -r FRAME; do
-      bc <<< "${FRAME} - ${STRTTM}" | xargs printf '%01.3f\n'
-    done < ${TMPDIR}/vcap.ift > ${TMPDIR}/vcap.ifl
-    rm ${TMPDIR}/vcap.ift
-
-    msg "Getting closest I-frame ${VDOBGN} in-point..."
-    cp ${TMPDIR}/vcap.ifl ${TMPDIR}/vcap.ifc
-    echo "${VIPSEC}" >> ${TMPDIR}/vcap.ifc
-    sort -n ${TMPDIR}/vcap.ifc > ${TMPDIR}/vcap.ifs
-    rm ${TMPDIR}/vcap.ifc
-    [[ ${VDOBGN} == "after" ]] && TIPSEC=$(grep -A 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | tail -1 | tr -d '\n')
-    [[ ${VDOBGN} == "before" ]] && TIPSEC=$(grep -B 1 "${VIPSEC}" ${TMPDIR}/vcap.ifs | head -1 | tr -d '\n')
-    rm ${TMPDIR}/vcap.ifs
-    TOPSEC=${VOPSEC}
-    TRMDUR=$(bc <<< "${TOPSEC} - ${TIPSEC}")
+    msg "Finding closest iframe ${VDOBGN} In-Point..."
+    eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC} ${VOPSEC} ${VDOBGN} 0)"
 
     msg "Creating ${VDOEXT^^} video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v copy \
