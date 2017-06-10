@@ -248,7 +248,7 @@ case ${PROCES} in
     msg "Remuxing ${VDOFIL}..."
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
     mv "tmp.${VDOEXT}" "remux.${VDOEXT}"
-    msg 'Remuxing complete.'
+
     ;;
 
   trim)
@@ -511,8 +511,6 @@ case ${PROCES} in
 
     ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a aac ${YTASET} normalize.mkv
 
-    msg "Finished creating normalize.mkv."
-
     ;;
 
   preview)
@@ -533,7 +531,7 @@ case ${PROCES} in
 
     msg "Creating preview video of length $(sec2tc "${DURATN}")..."
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${P_FLTR} -c:v libx264 -preset faster -crf 30 -af ${A_FLTR} -c:a libopus -b:a 48k preview.mkv
-    msg 'Finished preview video.'
+
     ;;
 
   vcap)
@@ -621,6 +619,7 @@ case ${PROCES} in
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
+
     ;;
 
   portable)
@@ -634,7 +633,7 @@ case ${PROCES} in
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
-    msg "Finished video from ${VIP_TC} to ${VOP_TC} in ${WRKFIL}."
+
     ;;
 
   lossless)
@@ -648,6 +647,7 @@ case ${PROCES} in
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
       -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
+
     ;;
 
   join)
@@ -708,7 +708,6 @@ case ${PROCES} in
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     mv temp.mp4 join.mp4
 
-    msg 'Finished combining videos.'
     ;;
 
   splitav)
@@ -718,7 +717,7 @@ case ${PROCES} in
     msg "Separating audio and video from ${2}..."
     ffmpeg ${FFOPTS} -i "${2}" -map 0:v:0 -c:v copy video.${VDOEXT} -map 0:a:0 -c:a copy audio.mp2
     [[ $? != 0 ]] && msg "Error separating video and audio from ${2}." && exit 1
-    msg "Finished separating video and audio from ${2}."
+
     ;;
 
   csav)
@@ -726,7 +725,7 @@ case ${PROCES} in
     msg "Combining video from ${2} with audio from ${3}..."
     ffmpeg ${FFOPTS} -i "${2}" -i "${3}" -c copy -map 0:v:0 -map 1:a:0 -shortest yt.mp4
     [[ $? != 0 ]] && msg "Error combining video from ${2} with audio from ${3}." && exit 1
-    msg "Finished Combining video in ${2} with audio from ${3}."
+
     ;;
 
   fixar)
@@ -748,7 +747,7 @@ case ${PROCES} in
 
     msg "Creating home archive from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}..."
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${V_FLTR} ${VDOSET} -af ${A_FLTR} ${AUDSET} homearch.mkv
-    msg "Finished home archive from ${VIP_TC} to ${VOP_TC} in ${VDOFIL}."
+
     ;;
 
   thumb)
@@ -775,6 +774,7 @@ case ${PROCES} in
         fi
       done
     fi
+
     ;;
 
   all)
@@ -847,11 +847,13 @@ case ${PROCES} in
         done
       done
     fi
+
     ;;
 
   *)
 
     msg "The '${PROCES}' process is unknown."
+    exit 1
     ;;
 
 esac
@@ -865,4 +867,4 @@ if [[ "|portable|youtube|" == *"|${PROCES}|"* ]]; then
   fi
 fi
 
-msg "${PROCES} finished successfully." "$( [ $ {PROCES}== all ] && echo "${CLBGRN}" )"
+msg "${PROCES} finished successfully." "$( [ ${PROCES} == all ] && echo "${CLBGRN}" )"
