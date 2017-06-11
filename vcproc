@@ -828,7 +828,7 @@ case ${PROCES} in
           cd "${DRCTRY}"
           case ${ALLPRC} in
             set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
-            *)   FDFILE="$(ls -U ${PROCES}.{mkv,mp4,ts} 2> /dev/null)" ;;
+            *)   FDFILE="$(ls -U ${ALLPRC}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
           if [ "${FDFILE}" == "" ]; then
             msg ":: Working on ${DRCTRY}/${ALLPRC}" "${CLBGRN}"
