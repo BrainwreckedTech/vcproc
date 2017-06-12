@@ -167,7 +167,3 @@ The following functions were created during development and have stagnated.
 #### `csav [video] [audio]` (Combine Seperate Audio and Video)
 
 Combine the video from `[video]` with the audio from `[audio]`.
-
-#### homearch
-
-This was meant as an alternative to creating lossless videos.  The only problem is that, for as much data as FFV1+FLAC can pump out, it is surprisingly quick at doing so.  A video that can be encoded in 45 minutes using x264+AAC in about 350MB can be encoded in 15 minutes using FFV1+FLAC in about 6-8 GB.
