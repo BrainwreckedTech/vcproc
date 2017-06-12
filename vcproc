@@ -259,6 +259,35 @@ function get_closest_iframe {
   echo "TIPSEC='${TIPSEC}';TOPSEC='${TOPSEC}';TRMDUR='${TRMDUR}';"
 }
 
+function set_crf {
+  # We expect $1 to be crf=nn or max=nn
+  IFS='=' read VAR VAL <<< "${1}"
+
+  case "${VAR}" in 
+    crf)
+      echo "${VAL}"
+      ;;
+    max)
+      [ "${VAL}" -lt 26 ] && echo '22'                    #            DXID FTIP FTSR
+      [ 26 -lt "${VAL}" -a "${VAL}" -lt 28 ] && echo '21' # Actual max 25.3 23.0 22.3
+      [ 29 -lt "${VAL}" -a "${VAL}" -lt 31 ] && echo '20' # Actual max 28.2 26.9 26.2
+      [ 32 -lt "${VAL}" -a "${VAL}" -lt 35 ] && echo '19' # Actual max 31.5 31.2 30.6
+      [ 36 -lt "${VAL}" -a "${VAL}" -lt 40 ] && echo '18' # Actual max 35.2 35.9 35.4
+      [ 41 -lt "${VAL}" -a "${VAL}" -lt 46 ] && echo '17' # Actual max 39.1 41.0 40.7
+      [ 47 -lt "${VAL}" -a "${VAL}" -lt 52 ] && echo '16' # Actual max 43.4 46.4 46.3
+      [ 53 -lt "${VAL}" -a "${VAL}" -lt 58 ] && echo '15' # Actual max 48.0 52.0 52.2
+      [ 59 -lt "${VAL}" -a "${VAL}" -lt 64 ] && echo '14' # Actual max 52.9 57.8 58.3
+      [ 65 -lt "${VAL}" -a "${VAL}" -lt 71 ] && echo '13' # Actual max 58.2 63.8 64.7
+      [ 72 -lt "${VAL}" -a "${VAL}" -lt 78 ] && echo '12' # Actual max 64.0 70.2 71.5
+      [ 79 -lt "${VAL}" -a "${VAL}" -lt 86 ] && echo '11' # Actual max 70.4 77.2 78.7
+      [ "${VAL}" -gt 86 ] && echo '10'                    # Actual max 77.5 84.6 86.6
+      ;;
+    *)
+      echo '22'
+      ;;
+  esac
+}
+
 ! command -v mpv &> /dev/null && \
 msg "Could not find mpv.  Play videos for `set` and `trim` manually." && MPVBIN=false
 
@@ -598,13 +627,8 @@ case ${PROCES} in
     shift
 
     for OPTARG in "${@}"; do
-      case "${OPTARG}" in
-        max30) CRF=20 ;; # Actual 28.1
-        max40) CRF=17 ;; # Actual 39.0
-        max50) CRF=15 ;; # Actual 47.9
-        max60) CRF=13 ;; # Actual 58.1
-        max70) CRF=11 ;; # Actual 70.3
-        max80) CRF=10 ;; # Actual 77.5
+      case "${OPTARG}" in 
+        crf=*|max=*) VCYTOA="${OPTARG//=/}"; CRF="$(set_crf "${OPTARG}")" ;;
       esac
     done
 
@@ -657,16 +681,8 @@ case ${PROCES} in
     shift
 
     while test $# -gt 0; do
-      if [[ ${1} == max?? ]]; then
-        case "${1}" in
-          max30) CRF=20 ;; # Actual 28.1
-          max40) CRF=17 ;; # Actual 39.0
-          max50) CRF=15 ;; # Actual 47.9
-          max60) CRF=13 ;; # Actual 58.1
-          max70) CRF=11 ;; # Actual 70.3
-          max80) CRF=10 ;; # Actual 77.5
-          max*)  echo "${1} is undefined." ; exit 1 ;;
-        esac
+      if [[ ${1} == max=?? || ${1} == crf=?? ]]; then
+        CRF="$(set_crf "${1}")"
       elif [[ "|ifa|ifb|mkv|mp4|" == *"|${1}|"* ]]; then
         msg "Ignoring '${1}' (vcap) argument."
       else
