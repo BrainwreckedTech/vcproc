@@ -142,19 +142,19 @@ The default video container is `mp4` due to the intention of uploading to YouTub
 
 As video splicing without re-encoding requires starting on an I-Frame, your In-Point will not be strictly adhered to.  The default behavior starts the video with closest I-Frame *after* your In-Point (`ifa`).  You can choose to start the video with the closest I-Frame *before* the In-Point with the `ifb` argument.
 
-#### `youtube [max30|max40|max50|max60|max70|max80]`
+#### `youtube [crf=nn|max=nn]`
 
 This step is intended for upload to YouTube.  If your video was captured at a very high bitrate, or if you wanted to change the the video's dimensions, framerate, DAR, and/or color range, use this step.  If your video was captured at a bit rate close to the target of 12Mb/s, and you aren't changing dimensions, framerate, DAR, or color range, try `vcap` instead.  Processing can take a while, depending on the speed of your computer.
 
-The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, `max70`, or `max80` to change the CRF value to 20, 17, 15, 13, 11, or 10, respectively.
+The default CRF value used is 22.  This can be changed with `crf=[nn]` (which will alter the CRF directly) or `max=[nn]` (which will alter CRF based on a desired maximum bitrate of `[nn]`Mb/s).
 
-#### `join [max30|max40|max50|max60|max70|max80] [video|vc] [video|vc] ...`
+#### `join [crf=nn|max=nn] [video|vc] [video|vc] ...`
 
 This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by `set` to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in `set`.
 
 Videos will be created sequentially -- `join0001.mkv`, `join0002.mkv`, etc.  You can process clips ahead of time using `lossless`, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
 
-The default CRF value used is 22.  However, you can specify one of `max30`, `max40`, `max50`, `max60`, `max70`, or `max80` to change the CRF value to 20, 17, 15, 13, 11, or 10, respectively.
+The default CRF value used is 22.  This can be changed with `crf=[nn]` (which will alter the CRF directly) or `max=[nn]` (which will alter CRF based on a desired maximum bitrate of `[nn]`MB/s).
 
 #### `lossless`
 
