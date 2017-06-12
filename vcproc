@@ -159,9 +159,9 @@ function check_config {
 }
 
 function nnd_compat_check {
-  PARDEC=$( awk "BEGIN { print int( ${OPWIDE} / ${OPHIGH} * 1000 + 0.5 ) / 1000 }" )
+  SARDEC=$( awk "BEGIN { print int( ${OPWIDE} / ${OPHIGH} * 1000 + 0.5 ) / 1000 }" )
   DARDEC=$( awk "BEGIN { print int( ${VDODAR} * 1000 + 0.5 ) / 1000 }" )
-  if [  ${PARDEC} != ${DARDEC} ]; then
+  if [  ${SARDEC} != ${DARDEC} ]; then
     OPWIDE=$(( ( ${OPHIGH} * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
     echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
   fi
