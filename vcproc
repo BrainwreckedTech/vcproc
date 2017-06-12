@@ -625,7 +625,8 @@ case ${PROCES} in
 
     eval "$(load_config)"
     check_config
-    eval "$(nnd_compat_check)"
+    CMPTRS="$(nnd_compat_check)"
+    [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
     eval "$(enable_usetmp)"
 
@@ -676,7 +677,8 @@ case ${PROCES} in
 
     eval "$(load_config)"
     check_config
-    eval "$(nnd_compat_check)"
+    CMPTRS="$(nnd_compat_check)"
+    [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
 
     JJOINS=
