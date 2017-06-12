@@ -259,6 +259,11 @@ function get_closest_iframe {
   echo "TIPSEC='${TIPSEC}';TOPSEC='${TOPSEC}';TRMDUR='${TRMDUR}';"
 }
 
+function get_video_duration {
+  VDDRTN=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${1}")
+  echo $( awk "BEGIN { print int( ${VDDRTN} * 1000 + 0.5 ) / 1000 }" )
+}
+
 function set_crf {
   # We expect $1 to be crf=nn or max=nn
   IFS='=' read VAR VAL <<< "${1}"
@@ -675,6 +680,7 @@ case ${PROCES} in
     process_config
 
     JJOINS=
+    JNDRTN=0
     JFILES=()
     JVFLTR=()
     JAFLTR=()
@@ -691,21 +697,20 @@ case ${PROCES} in
           JVFLTR+=("trim=${VIPSEC}:${VOPSEC},${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
           JAFLTR+=("atrim=${VIPSEC}:${VOPSEC},${A_FLTR},asetpts=PTS-STARTPTS[a${#JFILES[@]}];")
           JFILES+=("-i ${VDOFIL}")
+          JNDRTN=$( awk "BEGIN { print ${JNDRTN} + ${DURATN} }" )
+        elif [ -s "${1}" ]; then
+          JVFLTR+=("${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
+          JAFLTR+=("asetpts=PTS-STARTPTS[a${#JFILES[@]}];")
+          JFILES+=("-i ${1}")
+          JNDRTN=$( awk "BEGIN { print ${JNDRTN} + $(get_video_duration "${1}") }" )
         else
-          if [ -s "${1}" ]; then
-            JVFLTR+=("${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
-            JAFLTR+=("asetpts=PTS-STARTPTS[a${#JFILES[@]}];")
-            JFILES+=("-i ${1}")
-          else
-            msg "File '${1}' does not exist or is 0 bytes." && exit 1
-          fi
+          msg "File '${1}' does not exist or is 0 bytes." && exit 1
         fi
       fi
       shift
     done
 
-    msg 'Combining videos...'
-
+    msg "Using CRF ${CRF} to join ${#JFILES[@]} videos for $(sec2tc ${JNDRTN}) estimated run time."
     for ((JOINLP=0; JOINLP<${#JFILES[@]}; JOINLP++)); do
       FILTER+="[${JOINLP}:v:0]${JVFLTR[${JOINLP}]} [${JOINLP}:a:0]${JAFLTR[${JOINLP}]} "
     done
