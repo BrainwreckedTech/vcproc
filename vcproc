@@ -184,7 +184,8 @@ function process_config {
       CRHIGH=$(( ${OVHIGH} - ${CRPTOP} - ${CRPBTM} - 1))
       CRPFLT="crop=${CRWIDE}:${CRHIGH}:$((${CRPLFT}+1)):$((${CRPTOP}+1)),"
     fi
-    V_FLTR="${CRPFLT}scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
+    # If CRPFLT is part of V_FLTR, it will crop every video for the join process.
+    V_FLTR="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
   fi
 
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$( awk "BEGIN { print ${VOPSEC} - ${VIPSEC} }" )
@@ -583,7 +584,7 @@ case ${PROCES} in
     P_FLTR=${T_FLTR/${OPHIGH}/${PVHIGH}}
 
     msg "Creating preview video of length $(sec2tc "${DURATN}")..."
-    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${P_FLTR} -c:v libx264 -preset faster -crf 30 -af ${A_FLTR} -c:a libopus -b:a 48k preview.mkv
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${CRPFLT}${P_FLTR} -c:v libx264 -preset faster -crf 30 -af ${A_FLTR} -c:a libopus -b:a 48k preview.mkv
 
     ;;
 
@@ -640,7 +641,7 @@ case ${PROCES} in
 
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
+      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
 
     ;;
@@ -654,7 +655,7 @@ case ${PROCES} in
 
     msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
+      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
 
     ;;
@@ -668,7 +669,7 @@ case ${PROCES} in
     [ ! -s lossless.mkv ] && mv lossless.mp4 lossless.mkv || rm lossless.mp4
 
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
+      -vf ${CRPFLT}${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
       -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
 
     ;;
@@ -696,7 +697,7 @@ case ${PROCES} in
       else
         JJOINS+="[v${#JFILES[@]}][a${#JFILES[@]}]"
         if [ "${1}" == "vc" ]; then
-          JVFLTR+=("trim=${VIPSEC}:${VOPSEC},${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
+          JVFLTR+=("trim=${VIPSEC}:${VOPSEC},${CRPFLT}${V_FLTR},setpts=PTS-STARTPTS[v${#JFILES[@]}];")
           JAFLTR+=("atrim=${VIPSEC}:${VOPSEC},${A_FLTR},asetpts=PTS-STARTPTS[a${#JFILES[@]}];")
           JFILES+=("-i ${VDOFIL}")
           JNDRTN=$( awk "BEGIN { print ${JNDRTN} + ${DURATN} }" )
