@@ -294,7 +294,7 @@ function set_crf {
 }
 
 ! command -v mpv &> /dev/null && \
-msg "Could not find mpv.  Play videos for `set` and `trim` manually." && MPVBIN=false
+msg "Could not find mpv.  Play videos for 'set' and 'trim' manually." && MPVBIN=false
 
 grep -q 'PRETTY_NAME="Ubuntu ..\...\.. LTS"' /etc/os-release && \
 grep -q 'Linux version .*-Microsoft (Microsoft@Microsoft.com)' /proc/version && \
