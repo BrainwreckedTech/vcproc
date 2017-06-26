@@ -863,7 +863,7 @@ case ${PROCES} in
             msg ":: Working on ${DRCTRY}/${ALLPRC}" "${CLBGRN}"
             "${SCRPNM}" "${ALLPRC}" $@
           else
-            echo "${DRCTRY}/${FDFILE} exists -- skipping."
+            msg ":: Skipping ${DRCTRY}/${ALLPRC} -- ${FDFILE} exists" "${CLBGRN}"
           fi
           cd "${CURDIR}"
         done
