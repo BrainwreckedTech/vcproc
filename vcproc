@@ -57,8 +57,14 @@ function tc2sec() {
 }
 
 function sec2tc() {
-  WHLS=$(printf "%01d" "${1%\.*}")
-  MILS="$(( 10#${1#*\.} + 0 ))"
+  if [[ "${1}" =~ "." ]]; then
+    WHLS=$(printf "%01d" "${1%\.*}")
+    MILS="$(( 10#${1#*\.} + 0 ))"
+  else
+    WHLS="${1}"
+  fi
+ 
+  MILS+="000"
 
   ((HOUR=${WHLS}/3600))
   ((MINS=(${WHLS}%3600)/60))
