@@ -569,7 +569,7 @@ case ${PROCES} in
   preview)
 
     eval "$(load_config)"
-    check_config
+    check_config || { rm preview.mp4; exit 1; }
     process_config
 
     [ ! -s preview.mkv ] && mv preview.mp4 preview.mkv || rm preview.mp4
@@ -590,7 +590,7 @@ case ${PROCES} in
   vcap)
 
     eval "$(load_config)"
-    check_config
+    check_config || { rm vcap.mp4; exit 1; }
     process_config
 
     shift
@@ -624,7 +624,7 @@ case ${PROCES} in
   youtube)
 
     eval "$(load_config)"
-    check_config
+    check_config || { rm youtube.mp4; exit 1; }
     CMPTRS="$(nnd_compat_check)"
     [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
@@ -648,7 +648,7 @@ case ${PROCES} in
   portable)
 
     eval "$(load_config)"
-    check_config
+    check_config || { rm portable.mp4; exit 1; }
     process_config
     eval "$(enable_usetmp)"
 
@@ -662,7 +662,7 @@ case ${PROCES} in
   lossless)
 
     eval "$(load_config)"
-    check_config
+    check_config || { rm lossless.mp4; exit 1; }
     process_config
 
     [ ! -s lossless.mkv ] && mv lossless.mp4 lossless.mkv || rm lossless.mp4
@@ -676,7 +676,7 @@ case ${PROCES} in
   join)
 
     eval "$(load_config)"
-    check_config
+    check_config || { rm join.mp4; exit 1; }
     CMPTRS="$(nnd_compat_check)"
     [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
@@ -758,7 +758,7 @@ case ${PROCES} in
 
     if [ -f ${SCRPNM}.cfg ]; then
       load_config
-      check_config
+      check_config || { rm thumb.mp4; exit 1; }
       process_config
       [[ $( awk "BEGIN { print (${2} > 0) }" ) == 1 ]] && TMCODE=$( awk "BEGIN { print ${VIPSEC%.*} + ${2} }" ) || TMCODE=$( awk "BEGIN { print ${VOPSEC%.*} + ${2} }" )
       ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TMCODE}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
