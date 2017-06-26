@@ -127,13 +127,13 @@ function check_config {
   else
     [ -z ${VDOFIL+X} ] && msg 'ERROR: VDOFIL is not set' && ALLSET=false
     [ -z ${VIP_TC+X} ] && msg 'ERROR: VIP_TC is not set' && ALLSET=false
-    [ -z ${VOP_TC+X} ] && msg 'ERROR: VOP_TC is not set' && ALLSET=flase
-    [ -z ${OPWIDE+X} ] && msg 'ERROR: OPWIDE is not set' && ALLSET=flase
-    [ -z ${OPHIGH+X} ] && msg 'ERROR: OPHIGH is not set' && ALLSET=flase
-    [ -z ${IPCRNG+X} ] && msg 'ERROR: IPCRNG is not set' && ALLSET=flase
-    [ -z ${OPCRNG+X} ] && msg 'ERROR: OPCRNG is not set' && ALLSET=flase
-    [ -z ${FRMRAT+X} ] && msg 'ERROR: FRMRAT is not set' && ALLSET=flase
-    [ -z ${VDODAR+X} ] && msg 'ERROR: VDODAR is not set' && ALLSET=flase
+    [ -z ${VOP_TC+X} ] && msg 'ERROR: VOP_TC is not set' && ALLSET=false
+    [ -z ${OPWIDE+X} ] && msg 'ERROR: OPWIDE is not set' && ALLSET=false
+    [ -z ${OPHIGH+X} ] && msg 'ERROR: OPHIGH is not set' && ALLSET=false
+    [ -z ${IPCRNG+X} ] && msg 'ERROR: IPCRNG is not set' && ALLSET=false
+    [ -z ${OPCRNG+X} ] && msg 'ERROR: OPCRNG is not set' && ALLSET=false
+    [ -z ${FRMRAT+X} ] && msg 'ERROR: FRMRAT is not set' && ALLSET=false
+    [ -z ${VDODAR+X} ] && msg 'ERROR: VDODAR is not set' && ALLSET=false
   fi
 
   if ${ALLSET}; then
@@ -154,7 +154,8 @@ function check_config {
       msg "WARNING: 854x480 is a defacto standard."
   fi
 
-  return $(( ${CFPASS} ))
+  ${CFPASS} && RETVAL=0 || RETVAL=1
+  return ${RETVAL}
 
 }
 
