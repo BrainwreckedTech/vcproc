@@ -59,17 +59,17 @@ function tc2sec() {
 function sec2tc() {
   if [[ "${1}" =~ "." ]]; then
     WHLS=$(printf "%01d" "${1%\.*}")
-    MILS="$(( 10#${1#*\.} + 0 ))"
+    MILS="${1#*\.}"
   else
-    WHLS="${1}"
+    WHLS=$(printf "%01d" "${1}")
   fi
- 
+
   MILS+="000"
 
   ((HOUR=${WHLS}/3600))
   ((MINS=(${WHLS}%3600)/60))
   ((SECS=${WHLS}%60))
-  printf "%02d:%02d:%02d.%03d" ${HOUR} ${MINS} ${SECS} ${MILS:0:3}
+  printf "%02d:%02d:%02d.%03d" "${HOUR}" "${MINS}" "${SECS}" $(( 10#${MILS:0:3} ))
 }
 
 function istc() {
