@@ -173,6 +173,15 @@ function process_config {
   VIPSEC="$(tc2sec "${VIP_TC}")"
   VOPSEC="$(tc2sec "${VOP_TC}")"
 
+  # Try to adjust VIPSEC if FRMRAT != ORIGFR
+  ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -v 'spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
+
+  if [ $(awk "BEGIN { print ${FRMRAT} < ${ORIGFR} }") -eq 1 ]; then
+    VIPSEC=$( awk "BEGIN { print ${VIPSEC} + ( int ( ( 1 / ${FRMRAT} ) * ( ${FRMRAT} / ${ORIGFR} ) * 1000 + 0.5 ) / 1000 ) }" )
+    VIP_TC=$(sec2tc ${VIPSEC})
+    msg "Adjusted VIP_TC to ${VIP_TC} due to framrate downscaling."
+  fi
+
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
     GOPLEN="-g $( awk "BEGIN { print int( ( ${FRMRAT} + 1 ) / 2 ) }" )"
