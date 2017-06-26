@@ -863,7 +863,7 @@ esac
 if [[ "|portable|youtube|" == *"|${PROCES}|"* ]]; then
   if [ ! -z ${USETMP+X} ]; then
     msg "Moving ${OUTFIL} to ${PROCES}.mp4"
-    mv "${OUTFIL}" ${1}.mp4
+    mv "${OUTFIL}" ${PROCES}.mp4
     msg 'Cleaning up...'
     rm "${WRKFIL}"
   fi
