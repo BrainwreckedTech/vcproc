@@ -451,7 +451,9 @@ case ${PROCES} in
       HLPMSG='These properties were pulled from existing config.  Please verify them.'
     fi
 
-    SPROPS="$(${DLGBIN} --stdout --title 'Source Video Properties' --form "${HLPMSG}" 12 36 0 ' Width:' 1 1 "${OPWIDE}" 1 9 5 0 'Height:' 2 1 "${OPHIGH}" 2 9 5 0 '   FPS:' 3 1 "${FRMRAT}" 3 9 7 0 '   DAR:' 4 1 "${VDODAR}" 4 9 5 0 | tr '\n' '-' | sed 's/-$//g' )"
+    BCKTTL="Working on $(realpath "${VDOFIL}")"
+
+    SPROPS="$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title 'Source Video Properties' --form "${HLPMSG}" 13 35 0 ' Width:' 1 1 "${OPWIDE}" 1 9 5 0 'Height:' 2 1 "${OPHIGH}" 2 9 5 0 '   FPS:' 3 1 "${FRMRAT}" 3 9 7 0 '   DAR:' 4 1 "${VDODAR}" 4 9 5 0 | tr '\n' '-' | sed 's/-$//g' )"
 
     SPROP1=${SPROPS%-*-*}; SPROP2=${SPROPS#*-*-}
     OPWIDE=${SPROP1%-*};   OPHIGH=${SPROP1#*-}
@@ -461,7 +463,7 @@ case ${PROCES} in
 
     HLPMSG="Video will be expanded to the dimensions you specified earlier.\n\nLeaving the settings at all zeros leaves cropping disabled."
 
-    CRSETS="$(${DLGBIN} --stdout --title 'Crop Settings' --form "${HLPMSG}" 16 36 0 '   Crop Top:' 1 1 "${CRPTOP}" 1 14 5 0 '  Crop Left:' 2 1 "${CRPLFT}" 2 14 5 0 'Crop Bottom:' 3 1 "${CRPBTM}" 3 14 5 0 ' Crop Right:' 4 1 "${CRPRIT}" 4 14 5 0 | tr '\n' '-' | sed 's/-$//g' )"
+    CRSETS="$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title 'Crop Settings' --form "${HLPMSG}" 15 40 0 '   Crop Top:' 1 1 "${CRPTOP}" 1 14 5 0 '  Crop Left:' 2 1 "${CRPLFT}" 2 14 5 0 'Crop Bottom:' 3 1 "${CRPBTM}" 3 14 5 0 ' Crop Right:' 4 1 "${CRPRIT}" 4 14 5 0 | tr '\n' '-' | sed 's/-$//g' )"
 
     CRSET1=${CRSETS%-*-*}; CRSET2=${CRSETS#*-*-}
     CRPTOP=${CRSET1%-*};   CRPLFT=${CRSET1#*-}
@@ -479,7 +481,7 @@ case ${PROCES} in
     ${MPVBIN} && mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
 
     while true; do
-      TM_CDS="$(${DLGBIN} --stdout --title 'In/Out Points' --form "${HLPMSG}" 12 36 0 " In Point:" 1 1 "${TM_CDS%-*}" 1 12 13 0 "Out Point:" 2 1 "${TM_CDS#*-}" 2 12 13 0 | tr '\n' '-' | sed 's/-$//g' )"
+      TM_CDS="$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title 'In/Out Points' --form "${HLPMSG}" 15 31 0 " In Point:" 1 1 "${TM_CDS%-*}" 1 12 13 0 "Out Point:" 2 1 "${TM_CDS#*-}" 2 12 13 0 | tr '\n' '-' | sed 's/-$//g' )"
       istc "${TM_CDS%-*}" && istc "${TM_CDS#*-}" && break
       ${DLGBIN} --title 'OOPS!' --msgbox 'Invalid time code for in/out points.  Try again.' 0 0
     done
@@ -493,7 +495,7 @@ case ${PROCES} in
     fi
 
     HLPMSG='If you want to mute the audio at the beginning or end of the video, enter length of time here in seconds.'
-    MUTSET="$(${DLGBIN} --stdout --title 'Mute Setting' --form "${HLPMSG}" 0 0 0 "Mute first seconds of audio:" 1 1 "${MTLEAD}" 1 30 5 0 " Mute last seconds of audio:" 2 1 "${MTLAST}" 2 30 5 0 | tr '\n' '-' | sed 's/-$//g' )"
+    MUTSET="$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title 'Mute Setting' --form "${HLPMSG}" 0 0 0 "Mute first seconds of audio:" 1 1 "${MTLEAD}" 1 30 5 0 " Mute last seconds of audio:" 2 1 "${MTLAST}" 2 30 5 0 | tr '\n' '-' | sed 's/-$//g' )"
     echo "MTLEAD=${MUTSET%-*}" >> ${TMPDIR}/${SCRPNM}.tmp
     echo "MTLAST=${MUTSET#*-}" >> ${TMPDIR}/${SCRPNM}.tmp
 
@@ -504,7 +506,7 @@ case ${PROCES} in
     fi
 
     HLPMSG="What is the luma range in the source?\n\nOptical media typically uses Limited RGB.\n\nGame consoles output to Limited RGB unless you set them to use Full RGB.\n\nYou can take a snapshot from a video player and analyze the levels in an image editor if you are not sure."
-    IPCRNG=$(${DLGBIN} --stdout --backtitle "Source Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
+    IPCRNG=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Source Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
     echo "IPCRNG=${IPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if [ "${OPCRNG}" == pc ]; then
@@ -514,7 +516,7 @@ case ${PROCES} in
     fi
 
     HLPMSG="What is the luma range you would like in the output?\n\nLimited RGB will look slightly washed out on computer displays but fine on video displays.\n\nFull RGB will crush shadows and lights on video displays but look fine on computer displays."
-    OPCRNG=$(${DLGBIN} --stdout --backtitle "Output Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
+    OPCRNG=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Output Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
     echo "OPCRNG=${OPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     case "${PVWIDE}x${PVHIGH}" in
@@ -524,14 +526,14 @@ case ${PROCES} in
     esac
 
     HLPMSG="The preview video should be small (approx. 480p).\n\nCorrect way: Use the DVD standard 720x480 and set the DAR accordingly.\n\nCompatible way: Use 768x432 or 640x480 because some video players will not apply DAR correctly."
-    OP_RES=$(${DLGBIN} --stdout --backtitle "Preview Size" --radiolist "${HLPMSG}" 0 0 3 '720x480' 'Use DAR (345600 pixels)' "${SELDAR}" '768x432' '1:1 for 16:9 (331776 pixels)' "${SEL169}" '640x480' '1:1 for 4:3 (307200 pixels)' "${SLCT43}")
+    OP_RES=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Preview Size" --radiolist "${HLPMSG}" 0 0 3 '720x480' 'Use DAR (345600 pixels)' "${SELDAR}" '768x432' '1:1 for 16:9 (331776 pixels)' "${SEL169}" '640x480' '1:1 for 4:3 (307200 pixels)' "${SLCT43}")
     echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     if ! ask_copy_cfg 'ADPEAK'; then
-      ${DLGBIN} --infobox "\n Determining peak audio level..." 5 38
+      ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Determining peak audio level..." 5 38
       ADPEAK="$(ffmpeg -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
       echo "ADPEAK=${ADPEAK}" >> ${TMPDIR}/${SCRPNM}.tmp
-      ${DLGBIN} --msgbox "\n Peak audio level of -${ADPEAK}dB added to config." 7 51
+      ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Peak audio level of -${ADPEAK}dB added to config." 7 51
     fi
 
     sort -u ${TMPDIR}/${SCRPNM}.tmp > ./${SCRPNM}.cfg; rm ${TMPDIR}/${SCRPNM}.tmp
