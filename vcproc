@@ -209,12 +209,10 @@ function enable_usetmp {
   else
     WRKFIL="${TMPDIR}/${VDOFIL}"
     OUTFIL="${TMPDIR}/${PROCES}.mp4"
-    msg "Copying ${VDOFIL} to ${WRKFIL}..."
     cp "${VDOFIL}" "${WRKFIL}"
   fi
 
   echo "WRKFIL='${WRKFIL}';OUTFIL='${OUTFIL}'"
-
 }
 
 function get_pts_start {
