@@ -30,6 +30,22 @@ The `portable` process for `vcproc` uses x264's CRF 29.  This process is intende
 |  29 |   3.47Mb/s  |   9.15Mb/s  |   6.31Mb/s  |
 
 
+## Environment Variables
+
+At the moment, it does not matter what you set these environment variables to as `vcproc` only checks whether or not they are set.
+
+### IGNORE_EXISTING
+
+If set, `vcproc` will not skip processes if the the intended file already exists.
+
+This is useful if you messed up one small detail and want to make sure you apply a single change across multiple jobs.
+
+### USETMP
+
+If set, `vcproc` will copy work files to `/tmp/vcproc-${USER}`, do its work there, and copy the finished results back to the source directory.
+
+This is useful when the files reside on a network share.  If using multiple `vcproc` instances on multiple computers, this will avoid having every computer attempting to read from the file server all the time at the same time.
+
 ## VCPROC Processes
 
 VCPROC has five sets of process: General, Utilities, Pre-Production, Production, and Unsupported.

@@ -843,7 +843,7 @@ case ${PROCES} in
             set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
             *)   FDFILE="$(ls -U ${ALLPRC}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
-          if [ "${FDFILE}" == "" ]; then
+          if [ "${FDFILE}" == "" -o ! -z "${IGNORE_EXISTING+X}" ]; then
             msg ":: Working on ${DRCTRY}/${ALLPRC}" "${CLBGRN}"
             "${SCRPNM}" "${ALLPRC}" $@
           else
