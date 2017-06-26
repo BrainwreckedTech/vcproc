@@ -464,7 +464,7 @@ case ${PROCES} in
       HLPMSG='These properties were auto-detected.  Please verify them.'
       eval $(mediainfo "${VDOFIL}" | grep 'Width\|Height\|Display aspect ratio\|Frame rate' | grep -v 'mode\|spf' | sed 's/ *: /=/g;s/Display aspect ratio/VDODAR/g;s/Frame rate/FRMRAT/g;s/Height/OPHIGH/g;s/Width/OPWIDE/g;s/ pixels//g;s/ FPS//gI;s/ //g;s/(.*)//g;s/\.0\+//g;s|:|/|g')
     else
-      HLPMSG='These properties were pulled from existing config.  Please verify them.'
+      HLPMSG='These properties were pulled from an existing config.  Please verify them.'
     fi
 
     BCKTTL="Working on $(realpath "${VDOFIL}")"
@@ -487,14 +487,43 @@ case ${PROCES} in
 
     echo -e "CRPTOP=${CRPTOP}\nCRPLFT=${CRPLFT}\nCRPBTM=${CRPBTM}\nCRPRIT=${CRPRIT}" >> ${TMPDIR}/${SCRPNM}.tmp
 
+    ${MPVBIN} && { mpv --start="${VIP_TC}" --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!}; }
+
+    # This is the automated time entry
+
+    if [ -z ${VIP_TC+X} ]; then
+      HLPMSG="\n Use the automated method to specify an In-Point?\n"
+    else
+      HLPMSG="\n Existing config specified an In-Point of ${VIP_TC}.\n\n Do you wish to set a new In-Point?\n"
+    fi
+    HLPMSG+="\n YES: Navigate the video and press [ OK ]."
+    HLPMSG+="\n  NO: Press [ ESC ] to use manual In-Point entry."
+
+    ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 62
+
+    if [ ${?} == 0 ]; then
+       VIP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+
+      if [ -z ${VOP_TC+X} ]; then
+        HLPMSG="\n Use the automated method to specify an Out-Point?\n"
+      else
+        HLPMSG="\n Existing config specified an Out-Point of ${VOP_TC}.\n\n Do you wish to set a new Out-Point?\n"
+      fi
+      HLPMSG+="\n YES: Navigate the video and press [ YES ]."
+      HLPMSG+="\n  NO: Press [ ESC ] to use manual In-Point entry."
+
+      ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 63
+      [ ${?} == 0 ] && VOP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+    fi
+
+    # This is the manual time entry
+
     if [ -z ${VIP_TC+X} ] && [ -z ${VOP_TC+X} ]; then
       HLPMSG="Enter time codes in HH:MM:SS.mmm format."
     else
-      HLPMSG="These values were pulled from an existing config.  Please verify them.  Enter time codes in HH:MM:SS.mmm format."
+      HLPMSG="These values were pulled from an existing config.  Please verify them.\n\nEnter time codes in HH:MM:SS.mmm format."
       TM_CDS="${VIP_TC}-${VOP_TC}"
     fi
-
-    ${MPVBIN} && mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
 
     while true; do
       TM_CDS="$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title 'In/Out Points' --form "${HLPMSG}" 15 31 0 " In Point:" 1 1 "${TM_CDS%-*}" 1 12 13 0 "Out Point:" 2 1 "${TM_CDS#*-}" 2 12 13 0 | tr '\n' '-' | sed 's/-$//g' )"
@@ -504,6 +533,8 @@ case ${PROCES} in
 
     VIP_TC=${TM_CDS%-*}; echo "VIP_TC=${VIP_TC}" >> ${TMPDIR}/${SCRPNM}.tmp
     VOP_TC=${TM_CDS#*-}; echo "VOP_TC=${VOP_TC}" >> ${TMPDIR}/${SCRPNM}.tmp
+
+    # End manual time entry
 
     if [ -z ${MTLEAD+X} ] && [ -z ${MTLAST+X} ]; then
       MTLEAD=0
@@ -544,6 +575,8 @@ case ${PROCES} in
     HLPMSG="The preview video should be small (approx. 480p).\n\nCorrect way: Use the DVD standard 720x480 and set the DAR accordingly.\n\nCompatible way: Use 768x432 or 640x480 because some video players will not apply DAR correctly."
     OP_RES=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Preview Size" --radiolist "${HLPMSG}" 0 0 3 '720x480' 'Use DAR (345600 pixels)' "${SELDAR}" '768x432' '1:1 for 16:9 (331776 pixels)' "${SEL169}" '640x480' '1:1 for 4:3 (307200 pixels)' "${SLCT43}")
     echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> ${TMPDIR}/${SCRPNM}.tmp
+
+    kill ${MPVPID}
 
     if ! ask_copy_cfg 'ADPEAK'; then
       ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Determining peak audio level..." 5 38
