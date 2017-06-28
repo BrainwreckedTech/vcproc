@@ -487,7 +487,13 @@ case ${PROCES} in
 
     echo -e "CRPTOP=${CRPTOP}\nCRPLFT=${CRPLFT}\nCRPBTM=${CRPBTM}\nCRPRIT=${CRPRIT}" >> ${TMPDIR}/${SCRPNM}.tmp
 
-    ${MPVBIN} && { mpv --start="${VIP_TC}" --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!}; }
+    if ${MPVBIN}; then
+      if [ -z ${VIP_TC+X} ]; then
+        mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
+      else
+        mpv --start="${VIP_TC}" --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
+      fi
+    fi
 
     # This is the automated time entry
 
