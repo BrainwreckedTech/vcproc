@@ -633,7 +633,7 @@ case ${PROCES} in
 
     case ${2} in
       ''|*[!0-9]*) msg 'Invalid or no custom duration specified.' ;;
-      *) DURATN=${2} ;;
+      *) DURATN=${2}; VOPSEC="$(awk "BEGIN { print ${VIPSEC} + ${DURATN} }")"; VOP_TC="$(sec2tc ${VOPSEC})" ;;
     esac
 
     T_FLTR=${V_FLTR/${OPWIDE}/${PVWIDE}}
