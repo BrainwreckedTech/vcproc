@@ -180,7 +180,7 @@ function process_config {
   VOPSEC="$(tc2sec "${VOP_TC}")"
 
   # Try to adjust VIPSEC if FRMRAT != ORIGFR
-  ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -v 'spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
+  ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -vi 'spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
 
   if [ $(awk "BEGIN { print ${FRMRAT} < ${ORIGFR} }") -eq 1 ]; then
     OLDVIP=${VIP_TC}
@@ -462,7 +462,7 @@ case ${PROCES} in
 
     if [ -z ${OPWIDE+X} ] && [ -z ${OPHIGH+X} ] && [ -z ${FRMRAT+X} ] && [ -z ${VDODAR+X} ]; then
       HLPMSG='These properties were auto-detected.  Please verify them.'
-      eval $(mediainfo "${VDOFIL}" | grep 'Width\|Height\|Display aspect ratio\|Frame rate' | grep -v 'mode\|spf' | sed 's/ *: /=/g;s/Display aspect ratio/VDODAR/g;s/Frame rate/FRMRAT/g;s/Height/OPHIGH/g;s/Width/OPWIDE/g;s/ pixels//g;s/ FPS//gI;s/ //g;s/(.*)//g;s/\.0\+//g;s|:|/|g')
+      eval $(mediainfo "${VDOFIL}" | grep 'Width\|Height\|Display aspect ratio\|Frame rate' | grep -vi 'mode\|spf' | sed 's/ *: /=/g;s/Display aspect ratio/VDODAR/g;s/Frame rate/FRMRAT/g;s/Height/OPHIGH/g;s/Width/OPWIDE/g;s/ pixels//g;s/ FPS//gI;s/ //g;s/(.*)//g;s/\.0\+//g;s|:|/|g')
     else
       HLPMSG='These properties were pulled from an existing config.  Please verify them.'
     fi
