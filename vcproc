@@ -588,7 +588,7 @@ case ${PROCES} in
       ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Determining peak audio level..." 5 38
       ADPEAK="$(ffmpeg -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | cut -d- -f2 | cut -d\  -f1)"
       echo "ADPEAK=${ADPEAK}" >> ${TMPDIR}/${SCRPNM}.tmp
-      ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Peak audio level of -${ADPEAK}dB added to config." 7 51
+      ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Peak audio level of -${ADPEAK}dB added to config." 5 51
     fi
 
     sort -u ${TMPDIR}/${SCRPNM}.tmp > ./${SCRPNM}.cfg; rm ${TMPDIR}/${SCRPNM}.tmp
