@@ -369,11 +369,43 @@ case ${PROCES} in
       fi
     fi
 
-    TM_CDS=
-
-    ${MPVBIN} && mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &>/dev/null &
+    ${MPVBIN} && { mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!}; }
 
     while true; do
+
+    TM_CDS=
+
+    # This is the automated time entry
+
+      if [ -z ${VIP_TC+X} ]; then
+        HLPMSG="\n Use the automated method to specify an In-Point?\n"
+      else
+        HLPMSG="\n Existing config specified an In-Point of ${VIP_TC}.\n\n Do you wish to set a new In-Point?\n"
+      fi
+      HLPMSG+="\n YES: Navigate the video and press [ OK ]."
+      HLPMSG+="\n  NO: Press [ ESC ] to use manual In-Point entry."
+
+      ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 62
+
+      if [ ${?} == 0 ]; then
+         VIP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+
+        if [ -z ${VOP_TC+X} ]; then
+          HLPMSG="\n Use the automated method to specify an Out-Point?\n"
+        else
+          HLPMSG="\n Existing config specified an Out-Point of ${VOP_TC}.\n\n Do you wish to set a new Out-Point?\n"
+        fi
+        HLPMSG+="\n YES: Navigate the video and press [ YES ]."
+        HLPMSG+="\n  NO: Press [ ESC ] to use manual In-Point entry."
+
+        ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 63
+        [ ${?} == 0 ] && VOP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+      fi
+
+      TM_CDS="${VIP_TC}-${VOP_TC}"
+
+      # This is the manual time entry
+
       HLPMSG="Video #$(( ${#VIPSEC[@]} + 1 ))\n\nYou can do multiple trims in one go.\n\nEnter time codes in HH:MM:SS.sss format.\n\nPress Cancel when you are finished."
       TIMCDS="$(${DLGBIN} --stdout --title 'In/Out Points' --form "${HLPMSG}" 15 45 0 " In Point:" 1 1 "${TM_CDS%-*}" 1 12 13 0 "Out Point:" 2 1 "${TM_CDS#*-}" 2 12 13 0)"
       if [ ${?} -eq 0 ]; then
