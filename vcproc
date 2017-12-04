@@ -633,8 +633,6 @@ case ${PROCES} in
 
     [ ! -s normalize.mkv ] && mv normalize.mp4 normalize.mkv || rm normalize.mp4
 
-    VDOEXT="${2##*.}"
-
     MSSG01="Determining peak audio level..."
     MSSG02="Normalizing audio..."
 
