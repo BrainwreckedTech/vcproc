@@ -424,6 +424,8 @@ case ${PROCES} in
       fi
     done
 
+    kill ${MPVPID}
+
     for VDOFIL in "$@"; do
 
       VDOEXT="${VDOFIL##*.}"
