@@ -180,7 +180,7 @@ function process_config {
   VOPSEC="$(tc2sec "${VOP_TC}")"
 
   # Try to adjust VIPSEC if FRMRAT != ORIGFR
-  ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -vi 'spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
+  ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -vi 'mode\|spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
 
   if [ $(awk "BEGIN { print ${FRMRAT} < ${ORIGFR} }") -eq 1 ]; then
     OLDVIP=${VIP_TC}
