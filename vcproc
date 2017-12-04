@@ -180,7 +180,8 @@ function process_config {
 
   VIPSEC="$(tc2sec "${VIP_TC}")"
   VOPSEC="$(tc2sec "${VOP_TC}")"
-
+  OVWIDE=$(mediainfo "${VDOFIL}" | grep Width | sed 's/\([[:digit:]]\) \([[:digit:]]\)/\1\2/g;s/.*: \([[:digit:]]\+\) pixels/\1/g')
+  OVHIGH=$(mediainfo "${VDOFIL}" | grep Height | sed 's/\([[:digit:]]\) \([[:digit:]]\)/\1\2/g;s/.*: \([[:digit:]]\+\) pixels/\1/g')
   # Try to adjust VIPSEC if FRMRAT != ORIGFR
   ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -vi 'mode\|spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
 
@@ -197,8 +198,6 @@ function process_config {
     if [ ${CRPTOP} == 0 -a ${CRPLFT} == 0 -a ${CRPBTM} == 0 -a ${CRPRIT} == 0 ]; then
       CRPFLT=
     else
-      OVWIDE=$(mediainfo "${VDOFIL}" | grep Width | sed 's/\([[:digit:]]\) \([[:digit:]]\)/\1\2/g;s/.*: \([[:digit:]]\+\) pixels/\1/g')
-      OVHIGH=$(mediainfo "${VDOFIL}" | grep Height | sed 's/\([[:digit:]]\) \([[:digit:]]\)/\1\2/g;s/.*: \([[:digit:]]\+\) pixels/\1/g')
       CRWIDE=$(( ${OVWIDE} - ${CRPLFT} - ${CRPRIT} - 1))
       CRHIGH=$(( ${OVHIGH} - ${CRPTOP} - ${CRPBTM} - 1))
       CRPFLT="crop=${CRWIDE}:${CRHIGH}:$((${CRPLFT}+1)):$((${CRPTOP}+1)),"
