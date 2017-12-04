@@ -643,15 +643,27 @@ case ${PROCES} in
     fi
 
     ADPEAK="$(ffmpeg -i "${2}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | sed 's/ //g;s/dB//g;s/\:\-/:/g' | cut -d: -f2)"
-    A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,0)':volume=0"
 
-    if [ "${INTERACTIVE}" = "0" ]; then
-      msg "${MSSG02}"
+    if [ "${ADPEAK}" == "0.0" ]; then
+      MSSG02="Audio already peaks at 0dB."
+      if [ "${INTERACTIVE}" = "0" ]; then
+        msg "${MSSG02}"
+      else
+        ${DLGBIN} --backtitle "$(realpath "${2}")" --infobox "\n ✔ ${MSSG01}\n ✕ ${MSSG02}" 6 40
+      fi
+      [ ! -s normalize.mkv ] && rm normalize.mkv
     else
-      ${DLGBIN} --infobox "\n ✔ ${MSSG01}\n ➞ ${MSSG02}" 6 40
-    fi
+      MSSG02="Normalizing audio by +${ADPEAK}dB..."
+      A_FLTR="volume=${ADPEAK}dB,volume=enable=between'(t,0,0)':volume=0"
 
-    ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a aac ${YTASET} normalize.mkv
+      if [ "${INTERACTIVE}" = "0" ]; then
+        msg "${MSSG02}"
+      else
+        ${DLGBIN} --backtitle "$(realpath "${2}")" --infobox "\n ✔ ${MSSG01}\n ➞ ${MSSG02}" 6 40
+      fi
+
+      ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a aac ${YTASET} normalize.mkv
+    fi
 
     ;;
 
