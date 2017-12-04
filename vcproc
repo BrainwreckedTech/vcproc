@@ -39,6 +39,8 @@ CRPBTM=0
 CRPRIT=0
 MPVBIN=true
 CRF=22
+VCODEC=libx264
+#VCODEC=libx265
 
 function pak {
   read -r -n1 -r -s -p 'Press any key to continue...'
@@ -210,7 +212,8 @@ function process_config {
 
   OPSET1="-preset slower -refs 4"
   YTVSET="-bf 2 ${GOPLEN} -flags +cgop -movflags faststart"
-  OPSET2="-pix_fmt yuv420p -profile:v high -level 4.2"
+  OPSET2="-pix_fmt yuv420p"
+  [ "${VCODEC}" == "libx264" ] && OPSET2+=" -profile:v high -level 4.2"
   YTASET="-strict 2 -b:a 384k -r:a 48000"
 
 }
@@ -774,7 +777,7 @@ case ${PROCES} in
 
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
+      -vf ${CRPFLT}${V_FLTR} -c:v ${VCODEC} ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
 
     ;;
