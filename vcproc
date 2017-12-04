@@ -852,7 +852,7 @@ case ${PROCES} in
       check_config || { rm thumb.mp4; exit 1; }
       process_config
       [[ $( awk "BEGIN { print (${2} > 0) }" ) == 1 ]] && TMCODE=$( awk "BEGIN { print ${VIPSEC%.*} + ${2} }" ) || TMCODE=$( awk "BEGIN { print ${VOPSEC%.*} + ${2} }" )
-      ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${TMCODE}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
+      ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${VDOFIL}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
     else
       shopt -s nullglob
       for DRFILE in *.{3gp,asf,avi,divx,evo,f4v,flv,m2ts,mkv,mov,mp4,mpg,ogg,ps,qt,ts,webm,wmv}; do
@@ -863,7 +863,7 @@ case ${PROCES} in
 	    DRFDUR=$(ffprobe -i "${DRFILE}" 2>&1 | grep Duration | cut -d: -f2- | cut -d, -f1 | sed 's/ //g')
 	    TMCODE=$( awk "BEGIN { print $(tc2sec "${DRFDUR}") + ${2} }" )
 	  fi
-          ffmpeg ${FFOPTS} -i "${DRFILE}" -ss "${TMCODE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
+          ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${DRFILE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
         fi
       done
     fi
