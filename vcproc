@@ -204,7 +204,13 @@ function process_config {
       CRPFLT="crop=${CRWIDE}:${CRHIGH}:$((${CRPLFT}+1)):$((${CRPTOP}+1)),"
     fi
     # If CRPFLT is part of V_FLTR, it will crop every video for the join process.
-    V_FLTR="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
+
+    if [ ${OVHIGH} -lt 720 ]; then
+      V_FLTR="colorspace=space=bt709:trc=bt709:primaries=bt709:ispace=bt709:itrc=smpte170m:iprimaries=bt709,"
+    else
+      V_FLTR="colorspace=space=bt709:trc=bt709:primaries=bt709:ispace=bt709:itrc=srgb:iprimaries=bt709,"
+    fi
+    V_FLTR+="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
   fi
 
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$( awk "BEGIN { print ${VOPSEC} - ${VIPSEC} }" )
