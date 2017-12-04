@@ -152,6 +152,10 @@ If you don't want encode the entire clip (useful if you are checking audio sync)
 
 ### Production
 
+#### `audio-only [before|after] [timestamp]`
+
+Makes an audio file from a video clip.
+
 #### `vcap [mp4|mkv] [ifa|ifb]` (Video Copied, Audio Processed)
 
 This step is intended for upload to YouTube, but is quick enough (due to the lack of video processing) that it can be used in place of `preview`.  If you don't need to change your video's dimensions, framerate, DAR, or color range, and your video was recorded at 18Mb/s or less, you might want to consider simply copying the video and only processing audio.  This way, no video quality loss will occur and you will get the audio filters you desire.

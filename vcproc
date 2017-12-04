@@ -688,6 +688,38 @@ case ${PROCES} in
 
     ;;
 
+  audio-only)
+
+    eval "$(load_config)"
+    check_config || { rm vcap.mp4; exit 1; }
+    process_config
+
+    shift
+
+    VDOBGN="after"
+
+    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 vcap.${VDOEXT}
+
+    STRTTM=$(get_pts_start "${VDOFIL}")
+    msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
+
+    msg "Finding closest iframe ${VDOBGN} In-Point..."
+    eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC} ${VOPSEC} ${VDOBGN} 0)"
+
+    msg "Determining audio format..."
+    AUDFMT="$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name "${VDOFIL}" | grep codec_name | head -1 | cut -d= -f 2)"
+    msg "Audio format is ${AUDFMT}."
+    case "${AUDFMT}" in
+      aac) AUDEXT="m4a" ;;
+      mp2) AUDEXT="mp2" ;;
+    esac
+
+    msg "Making ${AUDEXT^^} audio from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v null \
+      -c:a ${AUDFMT} -af ${A_FLTR} audio.${AUDEXT}
+
+    ;;
+
   vcap)
 
     eval "$(load_config)"
