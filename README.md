@@ -76,9 +76,7 @@ This process determines a video file's peak volume and increases that peak to 0d
 
 #### `splitav [video]`
 
-This process splits the video and audio into two separate files: `video.[ext]` and `audio.mp2`, where `[ext]` is the original video container's extension.
-
-KNOWN BUG: The audio file is always named audio.mp2 regardless of the actual audio format.
+This process splits the video and audio into two separate files: `video.[ext]` and `audio.[ext]`.  For the video, `[ext]` will be the original video container's extension.  For the audio, vcproc will assign `[ext]` by parsing `ffprobe` output.
 
 #### `thumb [seconds]`
 

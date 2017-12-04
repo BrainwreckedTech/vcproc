@@ -823,8 +823,15 @@ case ${PROCES} in
 
     [ ! -s "${2}" ] && echo "${2} does not exist or is 0 bytes." && exit 1
     VDOEXT="${2##*.}"
+    msg "Determining audio format..."
+    AUDFMT="$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name "${2}" | grep codec_name | cut -d= -f 2)"
+    msg "Audio format is ${AUDFMT}."
+    case "${AUDFMT}" in
+      aac) AUDEXT="m4a" ;;
+      mp2) AUDEXT="mp2" ;;
+    esac
     msg "Separating audio and video from ${2}..."
-    ffmpeg ${FFOPTS} -i "${2}" -map 0:v:0 -c:v copy video.${VDOEXT} -map 0:a:0 -c:a copy audio.mp2
+    ffmpeg ${FFOPTS} -i "${2}" -map 0:v:0 -c:v copy video.${VDOEXT} -map 0:a:0 -c:a copy audio.${AUDEXT}
     [[ $? != 0 ]] && msg "Error separating video and audio from ${2}." && exit 1
 
     ;;
