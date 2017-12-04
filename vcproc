@@ -848,7 +848,7 @@ case ${PROCES} in
     [[ ! "${2}" =~ ^[+-]?[0-9]+([.][0-9]+)?$ ]] && echo "'${2}' is not a number.  ${0} thumb [number]" && exit
 
     if [ -f ${SCRPNM}.cfg ]; then
-      load_config
+      eval "$(load_config)"
       check_config || { rm thumb.mp4; exit 1; }
       process_config
       [[ $( awk "BEGIN { print (${2} > 0) }" ) == 1 ]] && TMCODE=$( awk "BEGIN { print ${VIPSEC%.*} + ${2} }" ) || TMCODE=$( awk "BEGIN { print ${VOPSEC%.*} + ${2} }" )
