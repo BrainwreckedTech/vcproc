@@ -458,7 +458,7 @@ case ${PROCES} in
       done
     done
 
-    [[ $(( ${#VIPSEC[@]} + ${OFFSET} )) == 1 ]] && rename '_trim_001' '_trim' *_trim_???.*
+    [[ $(( ${#VIPSEC[@]} + ${OFFSET} )) == 1 ]] && rename "_001." "." *_trim_001.*
 
     ;;
 
