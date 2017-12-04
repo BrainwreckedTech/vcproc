@@ -34,6 +34,10 @@ The `portable` process for `vcproc` uses x264's CRF 29.  This process is intende
 
 At the moment, it does not matter what you set these environment variables to as `vcproc` only checks whether or not they are set.
 
+### DISABLE_NND_COMPAT
+
+If set, `vcproc` will skip `nnd_compat_check` which makes video PAR as close to 1:1 as possible.
+
 ### IGNORE_EXISTING
 
 If set, `vcproc` will not skip processes if the the intended file already exists.

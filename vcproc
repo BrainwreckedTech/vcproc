@@ -716,7 +716,7 @@ case ${PROCES} in
 
     eval "$(load_config)"
     check_config || { rm youtube.mp4; exit 1; }
-    CMPTRS="$(nnd_compat_check)"
+    [ -z ${DISABLE_NND_COMPAT+X} ] && CMPTRS="$(nnd_compat_check)"
     [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
     [ ! -z ${USETMP+X} ] && msg "Copying ${VDOFIL} to ${TMPDIR}"
@@ -770,7 +770,7 @@ case ${PROCES} in
 
     eval "$(load_config)"
     check_config || { rm join.mp4; exit 1; }
-    CMPTRS="$(nnd_compat_check)"
+    [ -z ${DISABLE_NND_COMPAT+X} ] && CMPTRS="$(nnd_compat_check)"
     [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
 
