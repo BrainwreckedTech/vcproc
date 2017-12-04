@@ -186,10 +186,11 @@ function process_config {
   ORIGFR="$(mediainfo "${VDOFIL}" | grep 'Frame rate' | grep -vi 'mode\|spf' | sed 's/Frame rate *: //g;s/ FPS//gI;s/ (.*)//g;')"
 
   if [ $(awk "BEGIN { print ${FRMRAT} < ${ORIGFR} }") -eq 1 ]; then
-    OLDVIP=${VIP_TC}
+    OLDVIP=${VIP_TC}; OLDVOP=${VOP_TC}
     VIPSEC=$( awk "BEGIN { print ${VIPSEC} + ( int ( ( 1 / ${FRMRAT} ) * ( ${FRMRAT} / ${ORIGFR} ) * 2 * 1000 + 0.5 ) / 1000 ) }" )
-    VIP_TC=$(sec2tc ${VIPSEC})
-    msg "Adjusted VIP_TC from ${OLDVIP} to ${VIP_TC} due to framrate downscaling."
+    VOPSEC=$( awk "BEGIN { print ${VOPSEC} - ( int ( ( 1 / ${FRMRAT} ) * ( ${FRMRAT} / ${ORIGFR} ) * 1 * 1000 + 0.5 ) / 1000 ) }" )
+    VIP_TC=$(sec2tc ${VIPSEC}); VOP_TC=$(sec2tc ${VOPSEC})
+    msg "Changed ${OLDVIP#00\:}-${OLDVOP#00\:} to ${VIP_TC#00\:}-${VOP_TC#00\:} due to framerate downnscaling."
   fi
 
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
