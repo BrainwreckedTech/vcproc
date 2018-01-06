@@ -114,6 +114,10 @@ You can specify multiple In- and Out-Points in one go.  This is great if you wou
 
 You can also perform the operation across multiple files.  Each file will be trimmed with the same In- and Out-Points, so make sure the files are aligned well enough to perform the operation.
 
+#### `truncate [before|after] [timestamp]`
+
+This may be more useful than `trim` if you want to start at the beginning of a video, or keep going until the end.  Everything `before` or `after` the timestamp will be discarded.
+
 #### `set [video]`
 
 This is where you define your clips properties.  The steps are now taken care of via dialog.  Behind the scenes, this is what is being written to the config file:

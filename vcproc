@@ -471,6 +471,48 @@ case ${PROCES} in
 
     ;;
 
+  truncate|trunc)
+
+    case ${2} in
+      before)
+        VIP_TC="${3}"
+        VOP_TC="99:99:99.999"
+        ;;
+      after)
+        VIP_TC="00:00:00.000"
+        VOP_TC="${3}"
+        ;;
+      * ) msg "Must specify 'before' or 'after' for '${0} ${1}'"; exit 1;;
+    esac
+
+    istc "${3}" || { msg "${3} is not a valid time code."; exit 1; }
+
+    VIPSEC="$(tc2sec "${VIP_TC}")"
+    VOPSEC="$(tc2sec "${VOP_TC}")"
+    [[ -z ${SLACKTIME+X} ]] && SLACKR=3 || SLACKR=${SLACKTIME} # Number of extra seconds to keep when trimming
+
+    shift 3
+
+    for ARGMNT in "${@}"; do
+      [ ! -e "${ARGMNT}" ] && msg "${VDOFIL} does not exist." && exit 1
+      VIDEOS+=("${ARGMNT}")
+    done
+
+    for VDOFIL in "${VIDEOS[@]}"; do
+      VDOEXT="${VDOFIL##*.}"
+
+      STRTTM=$(get_pts_start "${VDOFIL}")
+      msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
+
+      msg "Finding closest iframe before In-Point..."
+      eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC} ${VOPSEC} before ${SLACKR})"
+
+      ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
+      mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trunc.${VDOEXT}"
+    done
+
+  ;;
+
   set)
 
    eval "$(load_config)"
