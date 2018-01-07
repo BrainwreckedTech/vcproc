@@ -100,12 +100,13 @@ If your recorder generates "goofy" timestamps, this step will become necessary. 
 
 #### `trim [video] [video] [video] ...`
 
-This process is optional but recommended to save space.  Chances are you don't want to save **all** of the video you recorded.  It operates much like `remux` in that the streams are still copied into the same container type they were found in, but `trim` will only copy the video between the In- and Out-Points you specify.
+This process is optional but recommended to save space.  Chances are you don't want to save **all** of the video you recorded.  It operates much like `remux` in that the streams are still copied into the same container type they were found in, but `trim` will only copy the video between the In- and Out-Points you specify.  If multiple videos are specified, they will all be trimmed within the same timestamps.
 
 Actually that's a bit of a lie, as `trim` will make some adjustments to your In-Point and Out-Points in favor of capturing extra video.
 
 + The In-Point will have three seconds subtracted from it
 + The In-Point will then be moved backwards to the closest I-frame (copied video must start on an I-Frame)
+ + Note that this may de-synchronize videos if the recording devices space I-frames differently.
 + The Out-Point will have three seconds added to it.
 
 The three-second slack space accounts for some "stickiness" with trimmed video.  The closer an In- or Out-Point is to the beginning or ending of a video, the more ffmpeg likes to "snap" that Point to an I-Frame.
@@ -114,9 +115,9 @@ You can specify multiple In- and Out-Points in one go.  This is great if you wou
 
 You can also perform the operation across multiple files.  Each file will be trimmed with the same In- and Out-Points, so make sure the files are aligned well enough to perform the operation.
 
-#### `truncate [before|after] [timestamp]`
+#### `truncate [before|after] [timestamp] [video] [video] [video] ...`
 
-This may be more useful than `trim` if you want to start at the beginning of a video, or keep going until the end.  Everything `before` or `after` the timestamp will be discarded.
+This may be more useful than `trim` if you want to start at the beginning of a video, or keep going until the end.  Everything `before` or `after` the timestamp will be discarded.  If multiple videos are specified, they will all be truncated from the same timestamp.
 
 #### `set [video]`
 
@@ -156,7 +157,7 @@ If you don't want encode the entire clip (useful if you are checking audio sync)
 
 ### Production
 
-#### `audio-only [before|after] [timestamp]`
+#### `audio-only`
 
 Makes an audio file from a video clip.
 
@@ -176,15 +177,13 @@ The default CRF value used is 22.  This can be changed with `crf=[nn]` (which wi
 
 #### `join [crf=nn|max=nn] [video|vc] [video|vc] ...`
 
-This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by `set` to appear.  Videos will be converted to (or created in) lossless FFV1 inside an MKV container using the filters you specified in `set`.
-
-Videos will be created sequentially -- `join0001.mkv`, `join0002.mkv`, etc.  You can process clips ahead of time using `lossless`, link to them in the filesystem using the expected names, and bypass the time (and hard drive space) needed to use the same clip over and over.
+This step joins two or more videos.  The keyword "vc" is used to denote where you want the video clip defined by `set` to appear.
 
 The default CRF value used is 22.  This can be changed with `crf=[nn]` (which will alter the CRF directly) or `max=[nn]` (which will alter CRF based on a desired maximum bitrate of `[nn]`MB/s).
 
 #### `lossless`
 
-This process creates a lossless video.  It's purpose is to create videos for the `join` process ahead of time.  Useful for clips that might be used over and over again, like intro, outros, and bumpers.  Simply `set` these clips like you would any other video, then use filesystem links to refer back to them.
+This process creates a lossless FV1 video.
 
 ### Unsupported Processes
 
