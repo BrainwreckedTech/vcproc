@@ -209,7 +209,13 @@ function process_config {
     # If CRPFLT is part of V_FLTR, it will crop every video for the join process.
 
     V_FLTR="colorspace=space=bt709:trc=bt709:primaries=bt709:ispace=bt709:itrc=smpte170m:iprimaries=bt709,"
-    V_FLTR+="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setdar=dar=${VDODAR/\//:}"
+
+    # Relying on VDODAR has seemed to stop working.
+    # Or maybe it doesn't work with MKV?
+    # Calculate VDOSAR from VDODAR, OPWIDE, and OPHIGH
+    VDOSAR=$( awk "BEGIN { print ${OPHIGH} / ${OPWIDE} / ${VDODAR#*/} * ${VDODAR%/*} }" )
+
+    V_FLTR+="scale=width=${OPWIDE}:height=${OPHIGH}:in_range=${IPCRNG}:out_range=${OPCRNG},fps=fps=${FRMRAT},setsar=sar=${VDOSAR}"
   fi
 
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$( awk "BEGIN { print ${VOPSEC} - ${VIPSEC} }" )
