@@ -388,7 +388,7 @@ case ${PROCES} in
       fi
     fi
 
-    ${MPVBIN} && { mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!}; }
+    ${MPVBIN} && { mpv --osd-fractions --osd-level=3 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!}; }
 
     while true; do
 
@@ -584,9 +584,9 @@ case ${PROCES} in
 
     if ${MPVBIN}; then
       if [ -z ${VIP_TC+X} ]; then
-        mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
+        mpv --osd-fractions --osd-level=3 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
       else
-        mpv --start="${VIP_TC}" --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
+        mpv --start="${VIP_TC}" --osd-fractions --osd-level=3 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
       fi
     fi
 
