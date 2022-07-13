@@ -700,7 +700,8 @@ case ${PROCES} in
 
   normalize)
 
-    [ ! -s normalize.mkv ] && mv normalize.mp4 normalize.mkv || rm normalize.mp4
+    VDOEXT=${2##*.}
+    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s normalize.mp4 ]] && mv normalize.mp4 normalize.${VDOEXT}
 
     MSSG01="Determining peak audio level..."
     MSSG02="Normalizing audio..."
@@ -715,6 +716,8 @@ case ${PROCES} in
 
     if [ "${ADPEAK}" == "${TAPEAK}" ]; then
       MSSG02="Audio peaks at -${TAPEAK}dB, not bothering."
+      rm normalize.${VDOEXT}
+      ${DLGBIN} --backtitle "$(realpath "${2}")" --infobox "\n ✔ ${MSSG01}\n ⨯ ${MSSG02}" 6 45
     else
       AUDADJ="$(awk "BEGIN { print ${ADPEAK} - ${TAPEAK} }")"
       MSSG02="Normalizing audio by $(printf '%+04.1f' ${AUDADJ})dB..."
@@ -726,7 +729,9 @@ case ${PROCES} in
         ${DLGBIN} --backtitle "$(realpath "${2}")" --infobox "\n ✔ ${MSSG01}\n ➞ ${MSSG02}" 6 45
       fi
 
-      ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a aac ${YTASET} normalize.mkv
+      AUDFMT="$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name "${2}" | grep codec_name | cut -d= -f 2 | uniq)"
+
+      ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a ${AUDFMT} -b:a 512k normalize.${VDOEXT}
     fi
 
     ;;
