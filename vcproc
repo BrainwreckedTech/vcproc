@@ -926,6 +926,8 @@ case ${PROCES} in
     msg "Audio format is ${AUDFMT}."
     case "${AUDFMT}" in
       aac) AUDEXT="m4a" ;;
+      ac3) AUDEXT="ac3" ;;
+      pcm*) AUDEXT="wav" ;;
       mp2) AUDEXT="mp2" ;;
     esac
     msg "Separating audio and video from ${2}..."
