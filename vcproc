@@ -1060,6 +1060,7 @@ case ${PROCES} in
     else
       CURDIR="$(pwd)"
       for DRCTRY in "${TARGET[@]}"; do
+        msg ":: Working on ${DRCTRY}" "${CLBGRN}"
         for ALLPRC in "${PRCLST[@]}"; do
           cd "${DRCTRY}"
           case ${ALLPRC} in
@@ -1067,8 +1068,8 @@ case ${PROCES} in
             *)   FDFILE="$(ls -U ${ALLPRC}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
           if [ "${FDFILE}" == "" -o ! -z "${IGNORE_EXISTING+X}" ]; then
-            msg ":: Working on ${DRCTRY}/${ALLPRC}" "${CLBGRN}"
-            "${SCRPNM}" "${ALLPRC}" $@
+            msg "==> ${ALLPRC}" "${CLBGRN}"
+            ${DRYRUN} && msg "  -> Will encode" "${CLBGRN}" || "${SCRPNM}" "${ALLPRC}" $@
           else
             msg ":: Skipping ${DRCTRY}/${ALLPRC} -- ${FDFILE} exists" "${CLBGRN}"
           fi
