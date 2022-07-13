@@ -709,7 +709,7 @@ case ${PROCES} in
       MSSG02="Audio peaks at -${TAPEAK}dB, not bothering."
     else
       AUDADJ="$(awk "BEGIN { print ${ADPEAK} - ${TAPEAK} }")"
-      MSSG02="Normalizing audio by +${AUDADJ}dB..."
+      MSSG02="Normalizing audio by $(printf '%+04.1f' ${AUDADJ})dB..."
       A_FLTR="volume=${AUDADJ}dB,volume=enable=between'(t,0,0)':volume=0"
 
       if [ "${INTERACTIVE}" = "0" ]; then
