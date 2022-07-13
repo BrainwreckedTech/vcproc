@@ -284,8 +284,8 @@ function get_closest_iframe {
   awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" >> ${TMPDIR}/iframes.copy
   sort -n ${TMPDIR}/iframes.copy > ${TMPDIR}/iframes.sort
   rm ${TMPDIR}/iframes.copy
-  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | tail -1 | tr -d '\n')
-  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | head -1 | tr -d '\n')
+  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 -- "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | tail -1 | tr -d '\n')
+  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 -- "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | head -1 | tr -d '\n')
   rm ${TMPDIR}/iframes.sort
 
   TOPSEC=$( awk "BEGIN { print ${OPOINT} + ${SLCKTM} }" )
