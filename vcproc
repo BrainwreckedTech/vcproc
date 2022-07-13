@@ -856,9 +856,23 @@ case ${PROCES} in
     [ ! -z ${USETMP+X} ] && msg "Copying ${VDOFIL} to ${TMPDIR}"
     eval "$(enable_usetmp)"
 
+    shift
+
+    CRF="$(set_crf "crf=29")"
+
+    for OPTARG in "${@}"; do
+      case "${OPTARG}" in 
+        crf=*|max=*) VCYTOA="${OPTARG//=/}"; CRF="$(set_crf "${OPTARG}")" ;;
+      esac
+    done
+
+    # OUTFIL="youtube-${VCYTOA}.mp4" # For debugging purposes only.
+
+    msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
+
     msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf 29 ${OPSET2} \
+      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
 
     ;;
