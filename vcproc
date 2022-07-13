@@ -348,21 +348,29 @@ case ${PROCES} in
 
   remux)
 
-    if [ -n "${2}" ] && [ -s "${2}" ]; then
-      VDOFIL="${2}"
-    elif [ -z ${VDOFIL+x} ]; then
-      VDOFIL="$(list_video_files)"
-      if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
-        [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog)"
+    shift
+
+    for ARGMNT in "${@}"; do
+      [ ! -e "${ARGMNT}" ] && msg "${ARGMNT} does not exist." && exit 1
+      VIDEOS+=("${ARGMNT}")
+    done
+
+
+    if [ ${#VIDEOS[@]} -eq 0 ]; then
+      VIDEOS+=( "$(list_video_files)" )
+      if [ "$(echo -n "${VIDEOS[0]}" | wc -l)" -eq "0" ]; then
+        [ -n "${VIDEOS[0]}" ] && msg "Found file ${VIDEOS[0]}" || VIDEOS[0]="$(get_file_dialog)"
       else
-        VDOFIL="$(get_file_dialog)"
-      fi    fi
+        VIDEOS[0]="$(get_file_dialog)"
+      fi
+    fi
 
-    VDOEXT="${VDOFIL##*.}"
-
-    msg "Remuxing ${VDOFIL}..."
-    ffmpeg ${FFOPTS} -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
-    mv "tmp.${VDOEXT}" "remux.${VDOEXT}"
+    for VDOFIL in "${VIDEOS[@]}"; do
+      VDOEXT="${VDOFIL##*.}"
+      msg "Remuxing ${VDOFIL}..."
+      ffmpeg ${FFOPTS} -i "${VDOFIL}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
+      mv "tmp.${VDOEXT}" "${VDOFIL%.*}_remux.${VDOEXT}"
+    done
 
     ;;
 
