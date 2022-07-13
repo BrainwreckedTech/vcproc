@@ -710,7 +710,7 @@ case ${PROCES} in
     else
       AUDADJ="$(awk "BEGIN { print ${ADPEAK} - ${TAPEAK} }")"
       MSSG02="Normalizing audio by $(printf '%+04.1f' ${AUDADJ})dB..."
-      A_FLTR="volume=${AUDADJ}dB,volume=enable=between'(t,0,0)':volume=0"
+      A_FLTR="volume=${AUDADJ}dB"
 
       if [ "${INTERACTIVE}" = "0" ]; then
         msg "${MSSG02}"
