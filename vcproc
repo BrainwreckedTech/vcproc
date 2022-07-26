@@ -269,7 +269,15 @@ function get_closest_iframe {
     [[ $( awk "BEGIN { print (${RISTOP} > ${OPOINT}) }" ) == 1 ]] && RISTOP="${OPOINT}"
     RIDRTN="$( awk "BEGIN { print ${RISTOP} - ${RISTRT} }" )"
 
-    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,pkt_pts_time -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${OVFILE}" | grep I | cut -d, -f2 > ${TMPDIR}/iframes.times
+    FF_VER=$(/usr/bin/ffmpeg -version | grep FFmpeg | cut -d\  -f3 | cut -d- -f1)
+
+    if [ $(echo -e "${FF_VER}\n5.0.0"|sort -V|head -1) = "5.0.0" ]; then
+      FF_NTRY="pts_time"
+    else
+      FF_NTRY="pkt_pts_time"
+    fi
+
+    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,${FF_NTRY} -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${OVFILE}" | grep I | cut -d, -f2 > ${TMPDIR}/iframes.times
 
     [ -s "${TMPDIR}/iframes.times" ] && break
   done
