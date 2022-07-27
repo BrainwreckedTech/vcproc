@@ -860,6 +860,15 @@ case ${PROCES} in
 
     eval "$(load_config)"
     check_config || { rm portable.mp4; exit 1; }
+
+    if [ "${2}" = "720p" ]; then
+      if [ ${OPHIGH} -gt 720 ]; then
+        OPWIDE=1280 && OPHIGH=720 && PROCES="portable_720p"
+      else
+        msg "Ignoring 720p request as resulting video is already 720p or less."
+      fi
+    fi
+
     process_config
     [ ! -z ${USETMP+X} ] && msg "Copying ${VDOFIL} to ${TMPDIR}"
     eval "$(enable_usetmp)"
