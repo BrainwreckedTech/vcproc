@@ -109,10 +109,10 @@ function load_config {
 
   for VCPCFG in "${CFGFLS[@]}"; do
 
-    tr '\r' '\n' < "${VCPCFG}" > ${TMPDIR}/${SCRPNM}.unix
-    sed -i '/^$/d' ${TMPDIR}/${SCRPNM}.unix
+    tr '\r' '\n' < "${VCPCFG}" > "${TMPDIR}/${SCRPNM}.unix"
+    sed -i '/^$/d' "${TMPDIR}/${SCRPNM}.unix"
     touch -d "$(date -R -r "${VCPCFG}")" "${TMPDIR}/${SCRPNM}.unix"
-    mv ${TMPDIR}/${SCRPNM}.unix "${VCPCFG}"
+    mv "${TMPDIR}/${SCRPNM}.unix" "${VCPCFG}"
 
     while IFS='= ' read -r lhs rhs; do
       if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
@@ -172,7 +172,7 @@ function check_config {
 function nnd_compat_check {
   SARDEC=$( awk "BEGIN { print int( ${OPWIDE} / ${OPHIGH} * 1000 + 0.5 ) / 1000 }" )
   DARDEC=$( awk "BEGIN { print int( ${VDODAR} * 1000 + 0.5 ) / 1000 }" )
-  if [  ${SARDEC} != ${DARDEC} ]; then
+  if [  "${SARDEC}" != "${DARDEC}" ]; then
     OPWIDE=$(( ( OPHIGH * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
     echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
   fi
@@ -191,7 +191,7 @@ function process_config {
     OLDVIP=${VIP_TC}; OLDVOP=${VOP_TC}
     VIPSEC=$( awk "BEGIN { print ${VIPSEC} + ( int ( ( 1 / ${FRMRAT} ) * ( ${FRMRAT} / ${ORIGFR} ) * 2 * 1000 + 0.5 ) / 1000 ) }" )
     VOPSEC=$( awk "BEGIN { print ${VOPSEC} - ( int ( ( 1 / ${FRMRAT} ) * ( ${FRMRAT} / ${ORIGFR} ) * 1 * 1000 + 0.5 ) / 1000 ) }" )
-    VIP_TC=$(sec2tc ${VIPSEC}); VOP_TC=$(sec2tc ${VOPSEC})
+    VIP_TC=$(sec2tc "${VIPSEC}"); VOP_TC=$(sec2tc "${VOPSEC}")
     msg "Changed ${OLDVIP#00\:}-${OLDVOP#00\:} to ${VIP_TC#00\:}-${VOP_TC#00\:} due to framerate downnscaling."
   fi
 
@@ -276,24 +276,24 @@ function get_closest_iframe {
       FF_NTRY="pkt_pts_time"
     fi
 
-    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,${FF_NTRY} -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${OVFILE}" | grep I | cut -d, -f2 > ${TMPDIR}/iframes.times
+    ffprobe -v fatal -select_streams v -show_frames -show_entries frame=pict_type,${FF_NTRY} -read_intervals "0${RISTRT}%+0${RIDRTN}" -of csv "${OVFILE}" | grep I | cut -d, -f2 > "${TMPDIR}/iframes.times"
 
     [ -s "${TMPDIR}/iframes.times" ] && break
   done
 
   while read -r FRAME; do
     awk "BEGIN { print ${FRAME} - ${STRTTM} }" | xargs printf '%01.3f\n'
-  done < ${TMPDIR}/iframes.times > ${TMPDIR}/iframes.list
-  rm ${TMPDIR}/iframes.times
+  done < "${TMPDIR}/iframes.times" > "${TMPDIR}/iframes.list"
+  rm "${TMPDIR}/iframes.times"
 
   #msg "Getting closest I-frame ${VDOBGN} in-point..."
-  cp ${TMPDIR}/iframes.list ${TMPDIR}/iframes.copy
-  awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" >> ${TMPDIR}/iframes.copy
-  sort -n ${TMPDIR}/iframes.copy > ${TMPDIR}/iframes.sort
-  rm ${TMPDIR}/iframes.copy
-  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 -- "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | tail -1 | tr -d '\n')
-  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 -- "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" ${TMPDIR}/iframes.sort | head -1 | tr -d '\n')
-  rm ${TMPDIR}/iframes.sort
+  cp "${TMPDIR}/iframes.list" "${TMPDIR}/iframes.copy"
+  awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" >> "${TMPDIR}/iframes.copy"
+  sort -n "${TMPDIR}/iframes.copy" > "${TMPDIR}/iframes.sort"
+  rm "${TMPDIR}/iframes.copy"
+  [[ "${IDRCTN}" == "after" ]] && TIPSEC=$(grep -A 1 -- "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" "${TMPDIR}/iframes.sort" | tail -1 | tr -d '\n')
+  [[ "${IDRCTN}" == "before" ]] && TIPSEC=$(grep -B 1 -- "$( awk "BEGIN { print ${IPOINT} - ${SLCKTM} }" )" "${TMPDIR}/iframes.sort" | head -1 | tr -d '\n')
+  rm "${TMPDIR}/iframes.sort"
 
   TOPSEC=$( awk "BEGIN { print ${OPOINT} + ${SLCKTM} }" )
   TRMDUR=$( awk "BEGIN { print ${TOPSEC} - ${TIPSEC} }" )
@@ -403,7 +403,7 @@ case ${PROCES} in
       fi
     fi
 
-    ${MPVBIN} && { mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!}; }
+    ${MPVBIN} && { mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> "${TMPDIR}/mpv.out" & export MPVPID=${!}; }
 
     while true; do
 
@@ -422,7 +422,7 @@ case ${PROCES} in
       ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 62
 
       if [ ${?} == 0 ]; then
-         VIP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+         VIP_TC="$(tail -1 "${TMPDIR}/mpv.out" | head -1 | cut -d\  -f3)"
 
         if [ -z ${VOP_TC+X} ]; then
           HLPMSG="\n Use the automated method to specify an Out-Point?\n"
@@ -433,7 +433,7 @@ case ${PROCES} in
         HLPMSG+="\n  NO: Press [ ESC ] to use manual In-Point entry."
 
         ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 63
-        [ ${?} == 0 ] && VOP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+        [ ${?} == 0 ] && VOP_TC="$(tail -1 "${TMPDIR}/mpv.out" | head -1 | cut -d\  -f3)"
       fi
 
       TM_CDS="${VIP_TC}-${VOP_TC}"
@@ -465,18 +465,19 @@ case ${PROCES} in
       VDOEXT="${VDOFIL##*.}"
 
       STRTTM=$(get_pts_start "${VDOFIL}")
-      msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
+      msg "Presentation Time Stamps start at $(sec2tc "${STRTTM}") for ${VDOFIL}..."
 
       for (( LPCNTR=0; LPCNTR<${#VIPSEC[@]}; LPCNTR++ )); do
 
         OFFSET=0
 
-        msg "WORKING ON ${VDOFIL^^} TRIM $(( LPCNTR + 1 )) OF ${#VIPSEC[@]}, TRIM FROM $(sec2tc ${VIPSEC[${LPCNTR}]}) TO $(sec2tc ${VOPSEC[${LPCNTR}]})"
+        msg "WORKING ON ${VDOFIL^^} TRIM $(( LPCNTR + 1 )) OF ${#VIPSEC[@]}, TRIM FROM $(sec2tc "${VIPSEC[${LPCNTR}]}") TO $(sec2tc "${VOPSEC[${LPCNTR}]}")"
 
         msg "Finding closest iframe before In-Point..."
-        eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC[${LPCNTR}]} ${VOPSEC[${LPCNTR}]} before ${SLACKR})"
+        eval "$(get_closest_iframe "${VDOFIL}" "${VIPSEC[${LPCNTR}]}" "${VOPSEC[${LPCNTR}]}" before "${SLACKR}")"
 
-        msg "Trimming ${VDOFIL} for duration of $(sec2tc ${TRMDUR}) ($(sec2tc ${TIPSEC})-$(sec2tc ${TOPSEC}))"
+        msg "Trimming ${VDOFIL} for duration of $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}")-$(sec2tc "${TOPSEC}"))"
+        # shellcheck disable=SC2086
         ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
 
         while true; do
@@ -527,11 +528,12 @@ case ${PROCES} in
       VDOEXT="${VDOFIL##*.}"
 
       STRTTM=$(get_pts_start "${VDOFIL}")
-      msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
+      msg "Presentation Time Stamps start at $(sec2tc "${STRTTM}") for ${VDOFIL}..."
 
       msg "Finding closest iframe before In-Point..."
-      eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC} ${VOPSEC} before ${SLACKR})"
+      eval "$(get_closest_iframe "${VDOFIL}" "${VIPSEC}" "${VOPSEC}" before "${SLACKR}")"
 
+      # shellcheck disable=SC2086
       ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
       mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trunc.${VDOEXT}"
     done
@@ -544,13 +546,13 @@ case ${PROCES} in
 
    function ask_copy_cfg() {
 
-      SETING="$(grep -q "${1}=" ${SCRPNM}.cfg 2> /dev/null)"
+      SETING="$(grep -q "${1}=" "${SCRPNM}.cfg" 2> /dev/null)"
       [[ "${SETING}" == "" ]] && return 1
       echo "Found: ${SETING}"
       read -p "Do you want to copy this setting from existing ${SCRPNM}.cfg? [y/N] " RESULT
       if [ "${RESULT,,}" == "y" ]; then
         eval "$(printf '%q' "${SETING}")"
-        echo "${SETING}" >> ${TMPDIR}/${SCRPNM}.tmp
+        echo "${SETING}" >> "${TMPDIR}/${SCRPNM}.tmp"
       else
         return  1
       fi
@@ -561,14 +563,14 @@ case ${PROCES} in
     elif [ -z ${VDOFIL+x} ]; then
       VDOFIL="$(list_video_files)"
       if [ "$(echo -n "${VDOFIL}" | wc -l)" -eq "0" ]; then
-        [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog "$(realpath ${VDOFIL})")"
+        [ -n "${VDOFIL}" ] && msg "Found file ${VDOFIL}" || VDOFIL="$(get_file_dialog "$(realpath "${VDOFIL}")")"
       else
         VDOFIL="$(get_file_dialog)"
       fi
     fi
 
     VDOEXT="${VDOFIL##*.}"
-    echo "VDOFIL=${VDOFIL#$(pwd)/}" > ${TMPDIR}/${SCRPNM}.tmp
+    echo "VDOFIL=${VDOFIL#$(pwd)/}" > "${TMPDIR}/${SCRPNM}.tmp"
 
     if [ -z ${OPWIDE+X} ] && [ -z ${OPHIGH+X} ] && [ -z ${FRMRAT+X} ] && [ -z ${VDODAR+X} ]; then
       HLPMSG='These properties were auto-detected.  Please verify them.'
@@ -585,7 +587,7 @@ case ${PROCES} in
     OPWIDE=${SPROP1%-*};   OPHIGH=${SPROP1#*-}
     FRMRAT=${SPROP2%-*};   VDODAR=${SPROP2#*-}
 
-    echo -e "OPWIDE=${OPWIDE}\nOPHIGH=${OPHIGH}\nFRMRAT=${FRMRAT}\nVDODAR=${VDODAR}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo -e "OPWIDE=${OPWIDE}\nOPHIGH=${OPHIGH}\nFRMRAT=${FRMRAT}\nVDODAR=${VDODAR}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     HLPMSG="Video will be expanded to the dimensions you specified earlier.\n\nLeaving the settings at all zeros leaves cropping disabled."
 
@@ -595,13 +597,13 @@ case ${PROCES} in
     CRPTOP=${CRSET1%-*};   CRPLFT=${CRSET1#*-}
     CRPBTM=${CRSET2%-*};   CRPRIT=${CRSET2#*-}
 
-    echo -e "CRPTOP=${CRPTOP}\nCRPLFT=${CRPLFT}\nCRPBTM=${CRPBTM}\nCRPRIT=${CRPRIT}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo -e "CRPTOP=${CRPTOP}\nCRPLFT=${CRPLFT}\nCRPBTM=${CRPBTM}\nCRPRIT=${CRPRIT}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     if ${MPVBIN}; then
       if [ -z ${VIP_TC+X} ]; then
-        mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
+        mpv --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> "${TMPDIR}/mpv.out" & export MPVPID=${!};
       else
-        mpv --start="${VIP_TC}" --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> ${TMPDIR}/mpv.out & export MPVPID=${!};
+        mpv --start="${VIP_TC}" --osd-fractions --osd-level=2 --loop=inf --pause "${VDOFIL}" &> "${TMPDIR}/mpv.out" & export MPVPID=${!};
       fi
     fi
 
@@ -618,7 +620,7 @@ case ${PROCES} in
     ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 62
 
     if [ ${?} == 0 ]; then
-       VIP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+       VIP_TC="$(tail -1 "${TMPDIR}/mpv.out" | head -1 | cut -d\  -f3)"
 
       if [ -z ${VOP_TC+X} ]; then
         HLPMSG="\n Use the automated method to specify an Out-Point?\n"
@@ -629,7 +631,7 @@ case ${PROCES} in
       HLPMSG+="\n  NO: Press [ ESC ] to use manual In-Point entry."
 
       ${DLGBIN} --backtitle "${BCKTTL}" --msgbox "${HLPMSG}" 12 63
-      [ ${?} == 0 ] && VOP_TC="$(tail -1 ${TMPDIR}/mpv.out | head -1 | cut -d\  -f3)"
+      [ ${?} == 0 ] && VOP_TC="$(tail -1 "${TMPDIR}/mpv.out" | head -1 | cut -d\  -f3)"
     fi
 
     # This is the manual time entry
@@ -647,8 +649,8 @@ case ${PROCES} in
       ${DLGBIN} --title 'OOPS!' --msgbox 'Invalid time code for in/out points.  Try again.' 0 0
     done
 
-    VIP_TC=${TM_CDS%-*}; echo "VIP_TC=${VIP_TC}" >> ${TMPDIR}/${SCRPNM}.tmp
-    VOP_TC=${TM_CDS#*-}; echo "VOP_TC=${VOP_TC}" >> ${TMPDIR}/${SCRPNM}.tmp
+    VIP_TC=${TM_CDS%-*}; echo "VIP_TC=${VIP_TC}" >> "${TMPDIR}/${SCRPNM}.tmp"
+    VOP_TC=${TM_CDS#*-}; echo "VOP_TC=${VOP_TC}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     # End manual time entry
 
@@ -659,8 +661,8 @@ case ${PROCES} in
 
     HLPMSG='If you want to mute the audio at the beginning or end of the video, enter length of time here in seconds.'
     MUTSET="$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title 'Mute Setting' --form "${HLPMSG}" 0 0 0 "Mute first seconds of audio:" 1 1 "${MTLEAD}" 1 30 5 0 " Mute last seconds of audio:" 2 1 "${MTLAST}" 2 30 5 0 | tr '\n' '-' | sed 's/-$//g' )"
-    echo "MTLEAD=${MUTSET%-*}" >> ${TMPDIR}/${SCRPNM}.tmp
-    echo "MTLAST=${MUTSET#*-}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo "MTLEAD=${MUTSET%-*}" >> "${TMPDIR}/${SCRPNM}.tmp"
+    echo "MTLAST=${MUTSET#*-}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     if [ "${IPCRNG}" == pc ]; then
       TVSLCT=off; PCSLCT=on
@@ -670,7 +672,7 @@ case ${PROCES} in
 
     HLPMSG="What is the luma range in the source?\n\nOptical media typically uses Limited RGB.\n\nGame consoles output to Limited RGB unless you set them to use Full RGB.\n\nYou can take a snapshot from a video player and analyze the levels in an image editor if you are not sure."
     IPCRNG=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Source Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
-    echo "IPCRNG=${IPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo "IPCRNG=${IPCRNG}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     if [ "${OPCRNG}" == pc ]; then
       TVSLCT=off; PCSLCT=on
@@ -680,7 +682,7 @@ case ${PROCES} in
 
     HLPMSG="What is the luma range you would like in the output?\n\nLimited RGB will look slightly washed out on computer displays but fine on video displays.\n\nFull RGB will crush shadows and lights on video displays but look fine on computer displays."
     OPCRNG=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Output Luma Scale" --radiolist "${HLPMSG}" 0 0 2 tv "Limited RGB (16-235)" ${TVSLCT} pc "Full RGB (0-255)" ${PCSLCT})
-    echo "OPCRNG=${OPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo "OPCRNG=${OPCRNG}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     case "${PVWIDE}x${PVHIGH}" in
       '768x432') SELDAR=off; SEL169=on; SLCT43=off;;
@@ -690,25 +692,25 @@ case ${PROCES} in
 
     HLPMSG="The preview video should be small (approx. 480p).\n\nCorrect way: Use the DVD standard 720x480 and set the DAR accordingly.\n\nCompatible way: Use 768x432 or 640x480 because some video players will not apply DAR correctly."
     OP_RES=$(${DLGBIN} --stdout --backtitle "${BCKTTL}" --title "Preview Size" --radiolist "${HLPMSG}" 0 0 3 '720x480' 'Use DAR (345600 pixels)' "${SELDAR}" '768x432' '1:1 for 16:9 (331776 pixels)' "${SEL169}" '640x480' '1:1 for 4:3 (307200 pixels)' "${SLCT43}")
-    echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> ${TMPDIR}/${SCRPNM}.tmp
+    echo -e "PVWIDE=${OP_RES%x*}\nPVHIGH=${OP_RES#*x}" >> "${TMPDIR}/${SCRPNM}.tmp"
 
     kill ${MPVPID}
 
     if ! ask_copy_cfg 'ADPEAK'; then
       ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Determining peak audio level..." 5 38
       ADPEAK="$(ffmpeg -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume | sed 's/ //g;s/dB//g;s/\:\-/:/g' | cut -d: -f2)"
-      echo "ADPEAK=${ADPEAK}" >> ${TMPDIR}/${SCRPNM}.tmp
+      echo "ADPEAK=${ADPEAK}" >> "${TMPDIR}/${SCRPNM}.tmp"
       ${DLGBIN} --backtitle "${BCKTTL}" --infobox "\n Peak audio level of -${ADPEAK}dB added to config." 5 51
     fi
 
-    sort -u ${TMPDIR}/${SCRPNM}.tmp > ./${SCRPNM}.cfg; rm ${TMPDIR}/${SCRPNM}.tmp
+    sort -u "${TMPDIR}/${SCRPNM}.tmp" > "./${SCRPNM}.cfg"; rm "${TMPDIR}/${SCRPNM}.tmp"
 
     ;;
 
   normalize)
 
     VDOEXT=${2##*.}
-    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s normalize.mp4 ]] && mv normalize.mp4 normalize.${VDOEXT}
+    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s normalize.mp4 ]] && mv normalize.mp4 "normalize.${VDOEXT}"
 
     MSSG01="Determining peak audio level..."
     MSSG02="Normalizing audio..."
@@ -723,11 +725,11 @@ case ${PROCES} in
 
     if [ "${ADPEAK}" == "${TAPEAK}" ]; then
       MSSG02="Audio peaks at -${TAPEAK}dB, not bothering."
-      rm normalize.${VDOEXT}
+      rm "normalize.${VDOEXT}"
       ${DLGBIN} --backtitle "$(realpath "${2}")" --infobox "\n ✔ ${MSSG01}\n ⨯ ${MSSG02}" 6 45
     else
       AUDADJ="$(awk "BEGIN { print ${ADPEAK} - ${TAPEAK} }")"
-      MSSG02="Normalizing audio by $(printf '%+04.1f' ${AUDADJ})dB..."
+      MSSG02="Normalizing audio by $(printf '%+04.1f' "${AUDADJ}")dB..."
       A_FLTR="volume=${AUDADJ}dB"
 
       if [ "${INTERACTIVE}" = "0" ]; then
@@ -738,7 +740,8 @@ case ${PROCES} in
 
       AUDFMT="$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name "${2}" | grep codec_name | cut -d= -f 2 | uniq)"
 
-      ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a ${AUDFMT} -b:a 512k normalize.${VDOEXT}
+      # shellcheck disable=SC2086
+      ffmpeg ${FFOPTS} -i "${2}" -c:v copy -af ${A_FLTR} -c:a ${AUDFMT} -b:a 512k "normalize.${VDOEXT}"
     fi
 
     ;;
@@ -753,13 +756,14 @@ case ${PROCES} in
 
     case ${2} in
       ''|*[!0-9]*) msg 'Invalid or no custom duration specified.' ;;
-      *) DURATN=${2}; VOPSEC="$(awk "BEGIN { print ${VIPSEC} + ${DURATN} }")"; VOP_TC="$(sec2tc ${VOPSEC})" ;;
+      *) DURATN=${2}; VOPSEC="$(awk "BEGIN { print ${VIPSEC} + ${DURATN} }")"; VOP_TC="$(sec2tc "${VOPSEC}")" ;;
     esac
 
     T_FLTR=${V_FLTR/${OPWIDE}/${PVWIDE}}
     P_FLTR=${T_FLTR/${OPHIGH}/${PVHIGH}}
 
     msg "Creating preview video of length $(sec2tc "${DURATN}")..."
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -vf ${CRPFLT}${P_FLTR} -c:v libx264 -preset faster -crf 30 -af ${A_FLTR} -c:a libopus -b:a 48k preview.mkv
 
     ;;
@@ -774,13 +778,13 @@ case ${PROCES} in
 
     VDOBGN="after"
 
-    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 vcap.${VDOEXT}
+    [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 "vcap.${VDOEXT}"
 
     STRTTM=$(get_pts_start "${VDOFIL}")
-    msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
+    msg "Presentation Time Stamps start at $(sec2tc "${STRTTM}") for ${VDOFIL}..."
 
     msg "Finding closest iframe ${VDOBGN} In-Point..."
-    eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC} ${VOPSEC} ${VDOBGN} 0)"
+    eval "$(get_closest_iframe "${VDOFIL}" "${VIPSEC}" "${VOPSEC}" "${VDOBGN}" 0)"
 
     msg "Determining audio format..."
     AUDFMT="$(ffprobe -v quiet -select_streams a:0 -show_entries stream=codec_name "${VDOFIL}" | grep codec_name | head -1 | cut -d= -f 2)"
@@ -791,8 +795,9 @@ case ${PROCES} in
     esac
 
     msg "Making ${AUDEXT^^} audio from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v null \
-      -c:a ${AUDFMT} -af ${A_FLTR} audio.${AUDEXT}
+      -c:a ${AUDFMT} -af ${A_FLTR} "audio.${AUDEXT}"
 
     ;;
 
@@ -819,12 +824,13 @@ case ${PROCES} in
     [[ "${VDOEXT}" != "mp4" ]] && [[ ! -s vcap.mp4 ]] && mv vcap.mp4 vcap.${VDOEXT}
 
     STRTTM=$(get_pts_start "${VDOFIL}")
-    msg "Presentation Time Stamps start at $(sec2tc ${STRTTM}) for ${VDOFIL}..."
+    msg "Presentation Time Stamps start at $(sec2tc "${STRTTM}") for ${VDOFIL}..."
 
     msg "Finding closest iframe ${VDOBGN} In-Point..."
-    eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC} ${VOPSEC} ${VDOBGN} 0)"
+    eval "$(get_closest_iframe "${VDOFIL}" "${VIPSEC}" "${VOPSEC}" "${VDOBGN}" 0)"
 
     msg "Making ${VDOEXT^^} video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v copy \
       -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
 
@@ -849,10 +855,10 @@ case ${PROCES} in
     done
 
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${CRPFLT}${V_FLTR} -c:v ${VCODEC} ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
+      -vf ${CRPFLT}${V_FLTR} -c:v ${VCODEC} ${OPSET1} -crf "${CRF}" ${YTVSET} ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
-
     ;;
 
   portable)
@@ -861,7 +867,7 @@ case ${PROCES} in
     check_config || { rm portable.mp4; exit 1; }
 
     if [ "${2}" = "720p" ]; then
-      if [ ${OPHIGH} -gt 720 ]; then
+      if [ "${OPHIGH}" -gt 720 ]; then
         OPWIDE=1280 && OPHIGH=720 && PROCES="portable_720p"
       else
         msg "Ignoring 720p request as resulting video is already 720p or less."
@@ -887,8 +893,9 @@ case ${PROCES} in
     msg "Using CRF ${CRF} to create video for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC}) from ${VDOFIL}."
 
     msg "Creating video from ${VDOFIL}, for $(sec2tc "${DURATN}") (${VIP_TC} to ${VOP_TC})"
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${WRKFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
-      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf ${CRF} ${OPSET2} \
+      -vf ${CRPFLT}${V_FLTR} -c:v libx264 ${OPSET1} -crf "${CRF}" ${OPSET2} \
       -af ${A_FLTR} -c:a aac ${YTASET} "${OUTFIL}"
 
     ;;
@@ -901,6 +908,7 @@ case ${PROCES} in
 
     [ ! -s lossless.mkv ] && mv lossless.mp4 lossless.mkv || rm lossless.mp4
 
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" \
       -vf ${CRPFLT}${V_FLTR} -c:v ffv1 -level 3 -threads 6 -coder 1 -context 1 -g 1 -slices 6 -slicecrc 1 \
       -af ${A_FLTR} -c:a flac -compression_level 12 lossless.mkv
@@ -946,14 +954,15 @@ case ${PROCES} in
       shift
     done
 
-    msg "Using CRF ${CRF} to join ${#JFILES[@]} videos for $(sec2tc ${JNDRTN}) estimated run time."
+    msg "Using CRF ${CRF} to join ${#JFILES[@]} videos for $(sec2tc "${JNDRTN}") estimated run time."
     for ((JOINLP=0; JOINLP<${#JFILES[@]}; JOINLP++)); do
       FILTER+="[${JOINLP}:v:0]${JVFLTR[${JOINLP}]} [${JOINLP}:a:0]${JAFLTR[${JOINLP}]} "
     done
 
-    ffmpeg ${FFOPTS} ${JFILES[@]} \
+    # shellcheck disable=SC2086
+    ffmpeg ${FFOPTS} "${JFILES[@]}" \
       -filter_complex "${FILTER}${JJOINS}concat=n=${#JFILES[@]}:v=1:a=1 [v] [a]" \
-      -map "[v]" -map "[a]" -c:v libx264 ${OPSET1} -crf ${CRF} ${YTVSET} ${OPSET2} \
+      -map "[v]" -map "[a]" -c:v libx264 ${OPSET1} -crf "${CRF}" ${YTVSET} ${OPSET2} \
       -c:a aac ${YTASET} temp.mp4
     [[ $? != 0 ]] && msg 'Error combining videos.' && exit 1
     mv temp.mp4 join.mp4
@@ -974,7 +983,8 @@ case ${PROCES} in
       mp2) AUDEXT="mp2" ;;
     esac
     msg "Separating audio and video from ${2}..."
-    ffmpeg ${FFOPTS} -i "${2}" -map 0:v:0 -c:v copy video.${VDOEXT} -map 0:a:0 -c:a copy audio.${AUDEXT}
+    # shellcheck disable=SC2086
+    ffmpeg ${FFOPTS} -i "${2}" -map 0:v:0 -c:v copy "video.${VDOEXT}" -map 0:a:0 -c:a copy audio.${AUDEXT}
     [[ $? != 0 ]] && msg "Error separating video and audio from ${2}." && exit 1
 
     ;;
@@ -982,6 +992,7 @@ case ${PROCES} in
   csav)
 
     msg "Combining video from ${2} with audio from ${3}..."
+    # shellcheck disable=SC2086
     ffmpeg ${FFOPTS} -i "${2}" -i "${3}" -c copy -map 0:v:0 -map 1:a:0 -shortest yt.mp4
     [[ $? != 0 ]] && msg "Error combining video from ${2} with audio from ${3}." && exit 1
 
@@ -991,19 +1002,21 @@ case ${PROCES} in
 
     [ ! -s "${2}" ] && echo "${2} does not exist or is 0 bytes." && exit 1
     VDOEXT="${2##*.}"
-    ffmpeg ${FFOPTS} -i "${2}" -aspect "${3}" -c copy fixar.${VDOEXT}
-    mv fixar.${VDOEXT} ${2}
+    # shellcheck disable=SC2086
+    ffmpeg ${FFOPTS} -i "${2}" -aspect "${3}" -c copy "fixar.${VDOEXT}"
+    mv "fixar.${VDOEXT}" "${2}"
     ;;
 
   thumb)
 
     [[ ! "${2}" =~ ^[+-]?[0-9]+([.][0-9]+)?$ ]] && echo "'${2}' is not a number.  ${0} thumb [number]" && exit
 
-    if [ -f ${SCRPNM}.cfg ]; then
+    if [ -f "${SCRPNM}.cfg" ]; then
       eval "$(load_config)"
       check_config || { rm thumb.mp4; exit 1; }
       process_config
       [[ $( awk "BEGIN { print (${2} > 0) }" ) == 1 ]] && TMCODE=$( awk "BEGIN { print ${VIPSEC%.*} + ${2} }" ) || TMCODE=$( awk "BEGIN { print ${VOPSEC%.*} + ${2} }" )
+      # shellcheck disable=SC2086
       ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${VDOFIL}" -vframes 1 "tn$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
     else
       shopt -s nullglob
@@ -1015,6 +1028,7 @@ case ${PROCES} in
 	    DRFDUR=$(ffprobe -i "${DRFILE}" 2>&1 | grep Duration | cut -d: -f2- | cut -d, -f1 | sed 's/ //g')
 	    TMCODE=$( awk "BEGIN { print $(tc2sec "${DRFDUR}") + ${2} }" )
 	  fi
+          # shellcheck disable=SC2086
           ffmpeg ${FFOPTS} -ss "${TMCODE}" -i "${DRFILE}" -vframes 1 "${DRFILE%.*}_$(printf "%07.2f" "${TMCODE}" | sed 's/\.//g').png"
         fi
       done
@@ -1081,7 +1095,7 @@ case ${PROCES} in
           cd "${DRCTRY}"
           case ${ALLPRC} in
             set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
-            *)   FDFILE="$(ls -U ${ALLPRC}.{mkv,mp4,ts} 2> /dev/null)" ;;
+            *)   FDFILE="$(ls -U "${ALLPRC}".{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
           if [ "${FDFILE}" == "" ] && [ -n "${IGNORE_EXISTING+X}" ]; then
             msg "==> ${ALLPRC}" "${CLBGRN}"
