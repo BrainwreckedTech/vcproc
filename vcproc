@@ -43,7 +43,6 @@ MPVBIN=true
 CRF=22
 VCODEC=libx264
 TAPEAK="0.1"
-#VCODEC=libx265
 
 function pak {
   read -r -n1 -r -s -p 'Press any key to continue...'
