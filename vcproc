@@ -57,7 +57,7 @@ function msg() {
 }
 
 function tc2sec() {
-  printf "%01.3f" "$((10#${1:0:2} * 3600 + 10#${1:3:2} * 60 + 10#${1:6:2})).${1:9:3}"
+  printf "%01.3f" "$(( 10#${1:0:2} * 3600 + 10#${1:3:2} * 60 + 10#${1:6:2} )).${1:9:3}"
 }
 
 function sec2tc() {
@@ -70,9 +70,9 @@ function sec2tc() {
 
   MILS+="000"
 
-  ((HOUR=${WHLS}/3600))
-  ((MINS=(${WHLS}%3600)/60))
-  ((SECS=${WHLS}%60))
+  (( HOUR= WHLS / 3600 ))
+  (( MINS= ( WHLS % 3600 ) / 60 ))
+  (( SECS = WHLS % 60 ))
   printf "%02d:%02d:%02d.%03d" "${HOUR}" "${MINS}" "${SECS}" $(( 10#${MILS:0:3} ))
 }
 
@@ -158,7 +158,7 @@ function check_config {
   fi
 
   if ${CFPASS}; then
-    [ $((${OPWIDE} % 8)) -ne 0 ] || [ $((${OPHIGH} % 8)) -ne 0 ] && \
+    [ $(( OPWIDE % 8 )) -ne 0 ] || [ $(( OPHIGH % 8 )) -ne 0 ] && \
       msg "WARNING: ${OPWIDE}x${OPHIGH} is not standard (dimensions not divisible by 8)."
     [ "${OPWIDE}x${OPHIGH}" == "854x480" ] &&
       msg "WARNING: 854x480 is a defacto standard."
@@ -173,7 +173,7 @@ function nnd_compat_check {
   SARDEC=$( awk "BEGIN { print int( ${OPWIDE} / ${OPHIGH} * 1000 + 0.5 ) / 1000 }" )
   DARDEC=$( awk "BEGIN { print int( ${VDODAR} * 1000 + 0.5 ) / 1000 }" )
   if [  ${SARDEC} != ${DARDEC} ]; then
-    OPWIDE=$(( ( ${OPHIGH} * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
+    OPWIDE=$(( ( OPHIGH * ${VDODAR%/*} + ${VDODAR#*/} ) / ${VDODAR#*/} ))
     echo "OPWIDE='${OPWIDE}';OPHIGH='${OPHIGH}';"
   fi
 }
@@ -201,9 +201,9 @@ function process_config {
     if [ ${CRPTOP} == 0 ] && [ ${CRPLFT} == 0 ] && [ ${CRPBTM} == 0 ] && [ ${CRPRIT} == 0 ]; then
       CRPFLT=
     else
-      CRWIDE=$(( ${OVWIDE} - ${CRPLFT} - ${CRPRIT} - 1))
-      CRHIGH=$(( ${OVHIGH} - ${CRPTOP} - ${CRPBTM} - 1))
-      CRPFLT="crop=${CRWIDE}:${CRHIGH}:$((${CRPLFT}+1)):$((${CRPTOP}+1)),"
+      CRWIDE=$(( OVWIDE - CRPLFT - CRPRIT - 1))
+      CRHIGH=$(( OVHIGH - CRPTOP - CRPBTM - 1))
+      CRPFLT="crop=${CRWIDE}:${CRHIGH}:$(( CRPLFT + 1 )):$(( CRPTOP + 1 )),"
     fi
     # If CRPFLT is part of V_FLTR, it will crop every video for the join process.
 
@@ -471,7 +471,7 @@ case ${PROCES} in
 
         OFFSET=0
 
-        msg "WORKING ON ${VDOFIL^^} TRIM $(( ${LPCNTR} + 1 )) OF ${#VIPSEC[@]}, TRIM FROM $(sec2tc ${VIPSEC[${LPCNTR}]}) TO $(sec2tc ${VOPSEC[${LPCNTR}]})"
+        msg "WORKING ON ${VDOFIL^^} TRIM $(( LPCNTR + 1 )) OF ${#VIPSEC[@]}, TRIM FROM $(sec2tc ${VIPSEC[${LPCNTR}]}) TO $(sec2tc ${VOPSEC[${LPCNTR}]})"
 
         msg "Finding closest iframe before In-Point..."
         eval "$(get_closest_iframe ${VDOFIL} ${VIPSEC[${LPCNTR}]} ${VOPSEC[${LPCNTR}]} before ${SLACKR})"
@@ -480,19 +480,19 @@ case ${PROCES} in
         ffmpeg ${FFOPTS} -ss "${TIPSEC}" -i "${VDOFIL}" -to "${TRMDUR}" -c:v copy -c:a copy -avoid_negative_ts make_zero "tmp.${VDOEXT}"
 
         while true; do
-          if [ -e ${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT} ]; then
-            ((OFFSET+=1))
+          if [ -e ${VDOFIL%.*}_trim_$(printf "%03d" "$(( LPCNTR + OFFSET + 1 ))").${VDOEXT} ]; then
+            (( OFFSET+=1 ))
           else
             break
           fi
         done
 
-        mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trim_$(printf "%03d" "$((${LPCNTR}+${OFFSET}+1))").${VDOEXT}"
+        mv "tmp.${VDOEXT}" "${VDOFIL%.*}_trim_$(printf "%03d" "$(( LPCNTR + OFFSET + 1 ))").${VDOEXT}"
 
       done
     done
 
-    [[ $(( ${#VIPSEC[@]} + ${OFFSET} )) == 1 ]] && rename "_001." "." *_trim_001.*
+    [[ $(( ${#VIPSEC[@]} + OFFSET )) == 1 ]] && rename "_001." "." *_trim_001.*
 
     ;;
 
