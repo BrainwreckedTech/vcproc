@@ -837,7 +837,7 @@ case ${PROCES} in
     [ -z ${DISABLE_NND_COMPAT+X} ] && CMPTRS="$(nnd_compat_check)"
     [ "${CMPTRS}" != "" ] && eval "${CMPTRS}" && msg "Changed video resolution to ${OPWIDE}x${OPHIGH} for NND"
     process_config
-    [ ! -z ${USETMP+X} ] && msg "Copying ${VDOFIL} to ${TMPDIR}"
+    [[ -n ${USETMP+X} ]] && msg "Copying ${VDOFIL} to ${TMPDIR}"
     eval "$(enable_usetmp)"
 
     shift
@@ -869,7 +869,7 @@ case ${PROCES} in
     fi
 
     process_config
-    [ ! -z ${USETMP+X} ] && msg "Copying ${VDOFIL} to ${TMPDIR}"
+    [[ -n ${USETMP+X} ]] && msg "Copying ${VDOFIL} to ${TMPDIR}"
     eval "$(enable_usetmp)"
 
     shift
@@ -1083,7 +1083,7 @@ case ${PROCES} in
             set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
             *)   FDFILE="$(ls -U ${ALLPRC}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
-          if [ "${FDFILE}" == "" ] && [ ! -z "${IGNORE_EXISTING+X}" ]; then
+          if [ "${FDFILE}" == "" ] && [ -n "${IGNORE_EXISTING+X}" ]; then
             msg "==> ${ALLPRC}" "${CLBGRN}"
             ${DRYRUN} && msg "  -> Will encode" "${CLBGRN}" || "${SCRPNM}" "${ALLPRC}" $@
           else
@@ -1105,7 +1105,7 @@ case ${PROCES} in
 esac
 
 if [[ "|portable|youtube|" == *"|${PROCES}|"* ]]; then
-  if [ ! -z ${USETMP+X} ]; then
+  if [[ -n ${USETMP+X} ]]; then
     msg "Moving ${OUTFIL} to ${PROCES}.mp4"
     mv "${OUTFIL}" ${PROCES}.mp4
     msg 'Cleaning up...'
