@@ -683,9 +683,9 @@ case ${PROCES} in
     echo "OPCRNG=${OPCRNG}" >> ${TMPDIR}/${SCRPNM}.tmp
 
     case "${PVWIDE}x${PVHIGH}" in
-      '768x432') SELDAR=off; SEL169=on; SLCT43=off; break;;
-      '640x480') SELDAR=off; SEL169=off; SLCT43=on; break;;
-              *) SELDAR=on; SEL169=off; SLCT43=off; break;;
+      '768x432') SELDAR=off; SEL169=on; SLCT43=off;;
+      '640x480') SELDAR=off; SEL169=off; SLCT43=on;;
+              *) SELDAR=on; SEL169=off; SLCT43=off;;
     esac
 
     HLPMSG="The preview video should be small (approx. 480p).\n\nCorrect way: Use the DVD standard 720x480 and set the DAR accordingly.\n\nCompatible way: Use 768x432 or 640x480 because some video players will not apply DAR correctly."
