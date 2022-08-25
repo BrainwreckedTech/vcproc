@@ -82,7 +82,7 @@ function istc() {
 
 function get_file_dialog() {
   RESULT=""
-  while [ ! -s "${RESULT}" -o "${RESULT}" == "" ]; do
+  while [ ! -s "${RESULT}" ] && [ "${RESULT}" == "" ]; do
     RESULT="$(${DLGBIN} --stdout --title ' Select video file to work on: ' --fselect "${1}" 10 72)"
   done
   echo "${RESULT}"
@@ -158,7 +158,7 @@ function check_config {
   fi
 
   if ${CFPASS}; then
-    [ $((${OPWIDE} % 8)) -ne 0 -o $((${OPHIGH} % 8)) -ne 0 ] && \
+    [ $((${OPWIDE} % 8)) -ne 0 ] || [ $((${OPHIGH} % 8)) -ne 0 ] && \
       msg "WARNING: ${OPWIDE}x${OPHIGH} is not standard (dimensions not divisible by 8)."
     [ "${OPWIDE}x${OPHIGH}" == "854x480" ] &&
       msg "WARNING: 854x480 is a defacto standard."
@@ -198,7 +198,7 @@ function process_config {
   if [ -n "${OPWIDE}" ] && [ -n "${OPHIGH}" ] && \
      [ -n "${IPCRNG}" ] && [ -n "${OPCRNG}" ] && [ -n "${FRMRAT}" ]; then
     GOPLEN="-g $( awk "BEGIN { print int( ( ${FRMRAT} + 1 ) / 2 ) }" )"
-    if [ ${CRPTOP} == 0 -a ${CRPLFT} == 0 -a ${CRPBTM} == 0 -a ${CRPRIT} == 0 ]; then
+    if [ ${CRPTOP} == 0 ] && [ ${CRPLFT} == 0 ] && [ ${CRPBTM} == 0 ] && [ ${CRPRIT} == 0 ]; then
       CRPFLT=
     else
       CRWIDE=$(( ${OVWIDE} - ${CRPLFT} - ${CRPRIT} - 1))
@@ -219,7 +219,7 @@ function process_config {
 
   [ -n "${VIPSEC}" ] && [ -n "${VOPSEC}" ] && DURATN=$( awk "BEGIN { print ${VOPSEC} - ${VIPSEC} }" )
 
-  if [ -n "${ADPEAK}" -a -n "${MTLEAD}" ]; then
+  if [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ]; then
     VOLADJ="$(awk "BEGIN { print ${ADPEAK} - ${TAPEAK} }")"
     msg "Adjusting volume by ${VOLADJ}dB to reach target peak of -${TAPEAK}dB."
     A_FLTR="volume=${VOLADJ}dB,volume=enable=between'(t,0,$( awk "BEGIN { print ${MTLEAD} + ${VIPSEC} }" ))':volume=0"
@@ -316,17 +316,17 @@ function set_crf {
       ;;
     max)
       [ "${VAL}" -lt 26 ] && echo '22'                    #            DXID FTIP FTSR
-      [ 26 -lt "${VAL}" -a "${VAL}" -lt 29 ] && echo '21' # Actual max 25.3 23.0 22.3
-      [ 28 -lt "${VAL}" -a "${VAL}" -lt 32 ] && echo '20' # Actual max 28.2 26.9 26.2
-      [ 31 -lt "${VAL}" -a "${VAL}" -lt 36 ] && echo '19' # Actual max 31.5 31.2 30.6
-      [ 35 -lt "${VAL}" -a "${VAL}" -lt 41 ] && echo '18' # Actual max 35.2 35.9 35.4
-      [ 40 -lt "${VAL}" -a "${VAL}" -lt 47 ] && echo '17' # Actual max 39.1 41.0 40.7
-      [ 46 -lt "${VAL}" -a "${VAL}" -lt 53 ] && echo '16' # Actual max 43.4 46.4 46.3
-      [ 51 -lt "${VAL}" -a "${VAL}" -lt 59 ] && echo '15' # Actual max 48.0 52.0 52.2
-      [ 58 -lt "${VAL}" -a "${VAL}" -lt 65 ] && echo '14' # Actual max 52.9 57.8 58.3
-      [ 64 -lt "${VAL}" -a "${VAL}" -lt 72 ] && echo '13' # Actual max 58.2 63.8 64.7
-      [ 71 -lt "${VAL}" -a "${VAL}" -lt 79 ] && echo '12' # Actual max 64.0 70.2 71.5
-      [ 78 -lt "${VAL}" -a "${VAL}" -lt 87 ] && echo '11' # Actual max 70.4 77.2 78.7
+      [ 26 -lt "${VAL}" ] && [ "${VAL}" -lt 29 ] && echo '21' # Actual max 25.3 23.0 22.3
+      [ 28 -lt "${VAL}" ] && [ "${VAL}" -lt 32 ] && echo '20' # Actual max 28.2 26.9 26.2
+      [ 31 -lt "${VAL}" ] && [ "${VAL}" -lt 36 ] && echo '19' # Actual max 31.5 31.2 30.6
+      [ 35 -lt "${VAL}" ] && [ "${VAL}" -lt 41 ] && echo '18' # Actual max 35.2 35.9 35.4
+      [ 40 -lt "${VAL}" ] && [ "${VAL}" -lt 47 ] && echo '17' # Actual max 39.1 41.0 40.7
+      [ 46 -lt "${VAL}" ] && [ "${VAL}" -lt 53 ] && echo '16' # Actual max 43.4 46.4 46.3
+      [ 51 -lt "${VAL}" ] && [ "${VAL}" -lt 59 ] && echo '15' # Actual max 48.0 52.0 52.2
+      [ 58 -lt "${VAL}" ] && [ "${VAL}" -lt 65 ] && echo '14' # Actual max 52.9 57.8 58.3
+      [ 64 -lt "${VAL}" ] && [ "${VAL}" -lt 72 ] && echo '13' # Actual max 58.2 63.8 64.7
+      [ 71 -lt "${VAL}" ] && [ "${VAL}" -lt 79 ] && echo '12' # Actual max 64.0 70.2 71.5
+      [ 78 -lt "${VAL}" ] && [ "${VAL}" -lt 87 ] && echo '11' # Actual max 70.4 77.2 78.7
       [ "${VAL}" -gt 86 ] && echo '10'                    # Actual max 77.5 84.6 86.6
       ;;
     *)
@@ -1083,7 +1083,7 @@ case ${PROCES} in
             set) FDFILE="$(ls -U vcproc.cfg 2> /dev/null)" ;;
             *)   FDFILE="$(ls -U ${ALLPRC}.{mkv,mp4,ts} 2> /dev/null)" ;;
           esac
-          if [ "${FDFILE}" == "" -o ! -z "${IGNORE_EXISTING+X}" ]; then
+          if [ "${FDFILE}" == "" ] && [ ! -z "${IGNORE_EXISTING+X}" ]; then
             msg "==> ${ALLPRC}" "${CLBGRN}"
             ${DRYRUN} && msg "  -> Will encode" "${CLBGRN}" || "${SCRPNM}" "${ALLPRC}" $@
           else
