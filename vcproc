@@ -831,9 +831,8 @@ case ${PROCES} in
 
     msg "Making ${VDOEXT^^} video from ${VDOFIL}, for $(sec2tc "${TRMDUR}") ($(sec2tc "${TIPSEC}") to $(sec2tc "${TOPSEC}"))"
     # shellcheck disable=SC2086
-    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss "${VIP_TC}" -to "${VOP_TC}" -c:v copy \
+    ffmpeg ${FFOPTS} -i "${VDOFIL}" -ss $(sec2tc "${TIPSEC}") -to "${VOP_TC}" -c:v copy \
       -af ${A_FLTR} -c:a aac ${YTASET} -shortest vcap.${VDOEXT}
-
     ;;
 
   youtube)
