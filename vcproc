@@ -221,8 +221,10 @@ function process_config {
 
   if [ -n "${ADPEAK}" ] && [ -n "${MTLEAD}" ]; then
     VOLADJ="$(awk "BEGIN { print ${ADPEAK} - ${TAPEAK} }")"
+    AUD_IP="$( awk "BEGIN { print ${MTLEAD} + ${VIPSEC} }" )"
     msg "Adjusting volume by ${VOLADJ}dB to reach target peak of -${TAPEAK}dB."
-    A_FLTR="volume=${VOLADJ}dB,volume=enable=between'(t,0,$( awk "BEGIN { print ${MTLEAD} + ${VIPSEC} }" ))':volume=0"
+    A_FLTR="volume=${VOLADJ}dB,volume=enable=between'(t,0,${AUD_IP})':volume=0"
+    [[ -n ${FADEIN+x} ]] && [[ ${FADEIN} =~ ^[0-9]+([.][0-9]+)?$ ]] && A_FLTR+=",afade=t=in:st=${AUD_IP}:d=${FADEIN}"
   fi
 
   OPSET1="-preset slower -refs 4"
